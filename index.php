@@ -47,6 +47,9 @@
                     $_SESSION["user_id"] = $row["user_id"];
                     header("Location: profile.php");
                 }
+                else{
+                    echo "Password is incorrect";
+                }
             }
             else{
                 "Email is not registered";

@@ -1,5 +1,7 @@
 <?php
-    include("database.php")
+    include("database.php"); //First of all code
+    session_start(); //before all html code
+    include("header.html");
 ?>
 
 <!DOCTYPE html>
@@ -7,60 +9,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pharmacy management system</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Handjet:wght@100..900&display=swap" rel="stylesheet">
+    <title>Document</title>
 </head>
-<body >
-    <h1>BOOK REVIEW SYSTEM</h1>
-    <p1> Admin login </p>
-    <form action="index.php" method="post">
-        <label>Username:</label><br>
-        <input type="text" name="username"><br>
-        <label>Password:</label><br>
-        <input type="password" name="password"><br>
-        <br>
-        <input type="submit" name = "login" value= "Sign in">  <br>
-        <input type="submit" name="regester" value= "Regester new account"> <br>
+<body>
+    <h2>Admin Login Page</h2>
+    <form action="<?php htmlspecialchars($_SERVER["PHP_SELF"])?>" method="post">
+            <div>
+                <label for="username">Username:</label>
+                <input type="text" name="username" id="username">
+            </div>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" name="password" id="password">
+            </div>
+            <div>
+                <input type="submit" value="Login" name="login">
+            </div>
     </form>
 </body>
-</html>
+
 <?php
-    if (isset($_POST["regester"])){
-        header("Location: Admin_Regester.php");
-    }
-    elseif ($_SERVER["REQUEST_METHOD"]=="POST"){
+    if($_SERVER["REQUEST_METHOD"]=="POST"){
+        if (!empty($_POST["username"]) && !empty($_POST["password"])){
+            $username=filter_input(INPUT_POST, "username", FILTER_SANITIZE_SPECIAL_CHARS);
+            $password=filter_input(INPUT_POST, "password", FILTER_SANITIZE_SPECIAL_CHARS);      
+            
+            $sql = "select * from admin where username='$username';";
+            $result=mysqli_query($conn, $sql); //returns object
 
-        $username = filter_input(INPUT_POST, "username", FILTER_SANITIZE_SPECIAL_CHARS);
-        $password = filter_input(INPUT_POST, "password", FILTER_SANITIZE_SPECIAL_CHARS);
-
-        if(empty($username)){
-            echo"Please enter a username";
-        }
-        elseif(empty($password)){
-            echo"Please enter password";
-        }
-        else{
-            $sql= "SELECT * from Pharmacy_owners WHERE Username = '$username' ";
-            $Data= mysqli_query($conn, $sql);
-            try{
-                $User = mysqli_fetch_assoc($Data);
-                echo $User["Birth_date"] ;
-                if(password_verify($password, $User["Password"])){
-                    $_SESSION["User"] = $User;
-                    echo"You are now logged in. <br>" ;   
-                    header("Location: home.php");
- 
+            if (mysqli_num_rows($result)>0){
+                $row = mysqli_fetch_assoc($result); //returns next row as disctionary
+                $hash = $row["password"];
+                if (password_verify($password, $hash)) {
+                    $_SESSION["username"] = $row["username"];
+                    header("Location: admin_panel.php");
                 }
                 else{
-                    echo"Wrong password or username";
+                    echo "Password is incorrect";
                 }
-
             }
-            catch(mysqli_sql_exception){
-                echo "User not found please regester first";
+            else{
+                "Username is not registered";
             }
-   
         }
-        
+        else{
+            echo "Please enter Username and password!";
+        }
     }
+?>
+<?php
+    include("footer.html"); 
+    mysqli_close($conn); //last of all code
+?>

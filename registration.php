@@ -26,13 +26,11 @@
                 <label for="password">Password:</label>
                 <input type="password" name="password" id="password">
             </div>
-            <div>
-                <label for="re_password">Re-enter password:</label>
-                <input type="password" name="re_password" id="re_password">
-            </div>
+
             <div>
                 <input type="submit" value="Register" name="reg">
             </div>
+            <div>Already have an account? <a href="index.php">Login</a></div>
     </form>
 </body>
 </html>
