@@ -26,6 +26,10 @@
                 <label for="password">Password:</label>
                 <input type="password" name="password" id="password">
             </div>
+            <div>
+                <label for="re_password">Re-enter Password:</label>
+                <input type="password" name="re_password" id="re_password">
+            </div>
 
             <div>
                 <input type="submit" value="Register" name="reg">
@@ -60,6 +64,10 @@
             elseif (!preg_match($password_pattern, $password)) {
             echo "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.<br>";
             }
+
+            elseif(strlen($password)<8){
+                echo "Password must be at least 8 characters long<br>";
+            }
             
             elseif(!($re_password)){
                 echo "Re-entered Password is not valid<br>";
@@ -68,7 +76,6 @@
                 echo "Passwords do not match";
             }
             else{
-
                 // Split the full name into parts based on spaces
                 $nameParts = explode(" ", $name);
 
@@ -88,29 +95,33 @@
                     for ($i = 2; $i < count($nameParts); $i++) {
                         $lastName .= $nameParts[$i] . " "; // Add each part to the last name
                     }
-                $lastName = trim($lastName); // Remove any extra spaces at the end
+                    $lastName = trim($lastName); // Remove any extra spaces at the end
+                } else {
+                    $lastName = $nameParts[1]; // If there are only two parts, assign the second part as the last name
+                }
 
 
 
-                $sql = "INSERT INTO `user` (`FName`, `MName`, `LName`, `Email`, `Password`) VALUES ('$firstName', '$middleName', '$lastName', '$email', '$hash');";
+                $sql = "INSERT INTO `user` (`fname`, `mname`, `lname`, `email`, `password`) 
+                VALUES ('$firstName', '$middleName', '$lastName', '$email', '$hash');";
 
-                try{
-                    mysqli_query($conn, $sql);
+                if (mysqli_query($conn, $sql)) {
                     $user_id = mysqli_insert_id($conn); // Get the ID of the user that was just inserted
                     $_SESSION["user_id"] = $user_id;
-                    header("Location: profile.php");
-                }
-                catch(mysqli_sql_exception){
-                    echo "Email is already registered";
+                    header("Location: reader_author_confirmation.php");
+                } else {
+                    echo "Error: " . mysqli_error($conn); // Catch error from query execution
                 }
                 
             }            
         }
-    }
         else{
             echo "Username, Email and Password cannot be empty!";
         }
+
     }
+
+        
 ?>
 <?php
     include("footer.html");

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 04, 2024 at 07:09 PM
+-- Generation Time: Sep 06, 2024 at 05:44 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -28,7 +28,6 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `admin` (
-  `admin_id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -40,9 +39,34 @@ CREATE TABLE `admin` (
 --
 
 CREATE TABLE `author` (
-  `user_id` int(11) NOT NULL,
-  `biography` text DEFAULT NULL,
+  `author_id` int(11) NOT NULL,
+  `biography` varchar(2000) DEFAULT NULL,
   `personal_website` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `author`
+--
+
+INSERT INTO `author` (`author_id`, `biography`, `personal_website`) VALUES
+(15, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `author_book_add_and_claim_request`
+--
+
+CREATE TABLE `author_book_add_and_claim_request` (
+  `request_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `isbn` int(11) NOT NULL,
+  `publish_date` date DEFAULT NULL,
+  `pages` int(11) DEFAULT NULL,
+  `purchase_link` varchar(255) DEFAULT NULL,
+  `editions` int(11) DEFAULT NULL,
+  `type` varchar(50) DEFAULT NULL,
+  `author_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -52,8 +76,8 @@ CREATE TABLE `author` (
 --
 
 CREATE TABLE `author_writes_book` (
-  `user_id` int(11) NOT NULL,
-  `isbn` varchar(13) NOT NULL
+  `author_id` int(11) NOT NULL,
+  `isbn` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -63,7 +87,7 @@ CREATE TABLE `author_writes_book` (
 --
 
 CREATE TABLE `author_written_genre` (
-  `user_id` int(11) NOT NULL,
+  `author_id` int(11) NOT NULL,
   `genre_name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -74,14 +98,14 @@ CREATE TABLE `author_written_genre` (
 --
 
 CREATE TABLE `book` (
-  `isbn` varchar(13) NOT NULL,
+  `isbn` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `publish_date` date DEFAULT NULL,
-  `type` varchar(50) DEFAULT NULL,
   `pages` int(11) DEFAULT NULL,
-  `editions` int(11) DEFAULT NULL,
-  `description` text DEFAULT NULL,
-  `purchase_link` varchar(255) DEFAULT NULL
+  `description` varchar(1000) DEFAULT NULL,
+  `type` varchar(50) DEFAULT NULL,
+  `purchase_link` varchar(255) DEFAULT NULL,
+  `editions` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -91,7 +115,7 @@ CREATE TABLE `book` (
 --
 
 CREATE TABLE `book_belongs_to_genre` (
-  `isbn` varchar(13) NOT NULL,
+  `isbn` int(11) NOT NULL,
   `genre_name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -102,7 +126,7 @@ CREATE TABLE `book_belongs_to_genre` (
 --
 
 CREATE TABLE `book_language` (
-  `isbn` varchar(13) NOT NULL,
+  `isbn` int(11) NOT NULL,
   `language` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -114,15 +138,15 @@ CREATE TABLE `book_language` (
 
 CREATE TABLE `book_request` (
   `request_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `isbn` varchar(13) DEFAULT NULL,
+  `isbn` int(11) DEFAULT NULL,
   `publish_date` date DEFAULT NULL,
   `pages` int(11) DEFAULT NULL,
   `purchase_link` varchar(255) DEFAULT NULL,
   `editions` int(11) DEFAULT NULL,
   `type` varchar(50) DEFAULT NULL,
-  `author_name` varchar(255) DEFAULT NULL
+  `author_name` varchar(100) DEFAULT NULL,
+  `reader_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -135,26 +159,22 @@ CREATE TABLE `genre` (
   `genre_name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `genre`
+-- Table structure for table `reader`
 --
 
-INSERT INTO `genre` (`genre_name`) VALUES
-('Biography'),
-('Business'),
-('Classics'),
-('Crime'),
-('Fantasy'),
-('Historical Fiction'),
-('History'),
-('Horror'),
-('Humor and Comedy'),
-('Poetry'),
-('Psychology'),
-('Religion'),
-('Science'),
-('Thriller'),
-('Travel');
+CREATE TABLE `reader` (
+  `reader_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `reader`
+--
+
+INSERT INTO `reader` (`reader_id`) VALUES
+(14);
 
 -- --------------------------------------------------------
 
@@ -165,11 +185,11 @@ INSERT INTO `genre` (`genre_name`) VALUES
 CREATE TABLE `review` (
   `review_id` int(11) NOT NULL,
   `rating` int(11) NOT NULL,
-  `posting_date` date NOT NULL DEFAULT current_timestamp(),
-  `description` text DEFAULT NULL,
+  `posting_date` date NOT NULL,
+  `spoilers` int(11) NOT NULL,
+  `description` varchar(1000) DEFAULT NULL,
   `started_reading` date DEFAULT NULL,
-  `finished_reading` date DEFAULT NULL,
-  `spoilers` tinyint(1) NOT NULL DEFAULT 0
+  `finished_reading` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -180,24 +200,25 @@ CREATE TABLE `review` (
 
 CREATE TABLE `user` (
   `user_id` int(11) NOT NULL,
-  `fname` varchar(100) NOT NULL,
-  `mname` varchar(100) DEFAULT NULL,
-  `lname` varchar(100) NOT NULL,
-  `email` varchar(255) NOT NULL,
+  `fname` varchar(50) NOT NULL,
+  `mname` varchar(50) DEFAULT NULL,
+  `lname` varchar(50) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
+  `email` varchar(100) NOT NULL,
   `joining_date` datetime NOT NULL DEFAULT current_timestamp(),
-  `gender` varchar(10) DEFAULT NULL,
-  `country` varchar(100) DEFAULT NULL,
-  `date_of_birth` date DEFAULT NULL,
-  `profile_picture` varchar(255) DEFAULT NULL
+  `profile_picture` varchar(255) DEFAULT NULL,
+  `gender` varchar(20) DEFAULT NULL,
+  `country` varchar(50) DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `user`
 --
 
-INSERT INTO `user` (`user_id`, `fname`, `mname`, `lname`, `email`, `password`, `joining_date`, `gender`, `country`, `date_of_birth`, `profile_picture`) VALUES
-(2, 'Mahir', 'Tajwar', 'Rahman', 'mahir19800@gmail.com', '$2y$10$Gam1eZDA45yiuxpJnX8sqONxje3vomy.fMSsYnswZPbJ6jPEECg3O', '2024-09-04 22:52:48', NULL, NULL, NULL, 'dp/66d894278a9517.91117509.jpg');
+INSERT INTO `user` (`user_id`, `fname`, `mname`, `lname`, `password`, `email`, `joining_date`, `profile_picture`, `gender`, `country`, `date_of_birth`) VALUES
+(14, 'Mahir', 'Tajwar', 'Rahman', '$2y$10$aNh15LlPi63UAhNSbiau/.LN04h.OEfhzPC21ki5f7AaRa2xm8NTq', 'mahir19800@gmail.com', '2024-09-06 21:12:12', NULL, NULL, NULL, NULL),
+(15, 'Arif', 'Azad', 'Azad', '$2y$10$9vwDnktHynAOO4nFR9dGUuVNqNLgMz7aODX35je9hznyVXZP1J1DS', 'arif11@gmail.com', '2024-09-06 21:15:38', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -206,8 +227,8 @@ INSERT INTO `user` (`user_id`, `fname`, `mname`, `lname`, `email`, `password`, `
 --
 
 CREATE TABLE `user_books_read_status` (
-  `isbn` varchar(13) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `isbn` int(11) NOT NULL,
+  `reader_id` int(11) NOT NULL,
   `reading_status` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -218,9 +239,8 @@ CREATE TABLE `user_books_read_status` (
 --
 
 CREATE TABLE `user_comments_review` (
-  `user_id` int(11) NOT NULL,
   `review_id` int(11) NOT NULL,
-  `description` varchar(255) NOT NULL
+  `reader_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -241,8 +261,8 @@ CREATE TABLE `user_follows_user` (
 --
 
 CREATE TABLE `user_likes_genre` (
-  `user_id` int(11) NOT NULL,
-  `genre_name` varchar(50) NOT NULL
+  `genre_name` varchar(50) NOT NULL,
+  `reader_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -252,8 +272,7 @@ CREATE TABLE `user_likes_genre` (
 --
 
 CREATE TABLE `user_likes_review` (
-  `user_id` int(11) NOT NULL,
-  `review_Id` int(11) NOT NULL
+  `review_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -263,9 +282,9 @@ CREATE TABLE `user_likes_review` (
 --
 
 CREATE TABLE `user_reviews_book` (
-  `user_id` int(11) NOT NULL,
-  `review_Id` int(11) NOT NULL,
-  `isbn` varchar(13) NOT NULL
+  `review_id` int(11) NOT NULL,
+  `isbn` int(11) NOT NULL,
+  `reader_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -275,8 +294,8 @@ CREATE TABLE `user_reviews_book` (
 --
 
 CREATE TABLE `user_social_media_url` (
-  `user_id` int(11) NOT NULL,
-  `social_media_url` varchar(255) NOT NULL
+  `social_media_url` varchar(255) NOT NULL,
+  `reader_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -287,63 +306,74 @@ CREATE TABLE `user_social_media_url` (
 -- Indexes for table `admin`
 --
 ALTER TABLE `admin`
-  ADD PRIMARY KEY (`admin_id`),
-  ADD UNIQUE KEY `username` (`username`);
+  ADD PRIMARY KEY (`username`);
 
 --
 -- Indexes for table `author`
 --
 ALTER TABLE `author`
-  ADD PRIMARY KEY (`user_id`),
-  ADD UNIQUE KEY `Personal_Website` (`personal_website`);
+  ADD PRIMARY KEY (`author_id`),
+  ADD UNIQUE KEY `personal_website` (`personal_website`);
+
+--
+-- Indexes for table `author_book_add_and_claim_request`
+--
+ALTER TABLE `author_book_add_and_claim_request`
+  ADD PRIMARY KEY (`request_id`),
+  ADD KEY `author_id` (`author_id`);
 
 --
 -- Indexes for table `author_writes_book`
 --
 ALTER TABLE `author_writes_book`
-  ADD PRIMARY KEY (`user_id`,`isbn`),
-  ADD KEY `ISBN` (`isbn`);
+  ADD PRIMARY KEY (`author_id`,`isbn`),
+  ADD KEY `isbn` (`isbn`);
 
 --
 -- Indexes for table `author_written_genre`
 --
 ALTER TABLE `author_written_genre`
-  ADD PRIMARY KEY (`user_id`,`genre_name`),
-  ADD KEY `Genre_name` (`genre_name`);
+  ADD PRIMARY KEY (`author_id`,`genre_name`),
+  ADD KEY `genre_name` (`genre_name`);
 
 --
 -- Indexes for table `book`
 --
 ALTER TABLE `book`
   ADD PRIMARY KEY (`isbn`),
-  ADD UNIQUE KEY `Purchase_Link` (`purchase_link`);
+  ADD UNIQUE KEY `purchase_link` (`purchase_link`);
 
 --
 -- Indexes for table `book_belongs_to_genre`
 --
 ALTER TABLE `book_belongs_to_genre`
-  ADD PRIMARY KEY (`genre_name`,`isbn`),
-  ADD KEY `ISBN` (`isbn`);
+  ADD PRIMARY KEY (`isbn`,`genre_name`),
+  ADD KEY `genre_name` (`genre_name`);
 
 --
 -- Indexes for table `book_language`
 --
 ALTER TABLE `book_language`
-  ADD PRIMARY KEY (`language`,`isbn`),
-  ADD KEY `ISBN` (`isbn`);
+  ADD PRIMARY KEY (`isbn`,`language`);
 
 --
 -- Indexes for table `book_request`
 --
 ALTER TABLE `book_request`
   ADD PRIMARY KEY (`request_id`),
-  ADD KEY `User_ID` (`user_id`);
+  ADD KEY `reader_id` (`reader_id`);
 
 --
 -- Indexes for table `genre`
 --
 ALTER TABLE `genre`
   ADD PRIMARY KEY (`genre_name`);
+
+--
+-- Indexes for table `reader`
+--
+ALTER TABLE `reader`
+  ADD PRIMARY KEY (`reader_id`);
 
 --
 -- Indexes for table `review`
@@ -356,87 +386,67 @@ ALTER TABLE `review`
 --
 ALTER TABLE `user`
   ADD PRIMARY KEY (`user_id`),
-  ADD UNIQUE KEY `Email` (`email`),
-  ADD UNIQUE KEY `Profile_Picture` (`profile_picture`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD UNIQUE KEY `profile_picture` (`profile_picture`);
 
 --
 -- Indexes for table `user_books_read_status`
 --
 ALTER TABLE `user_books_read_status`
-  ADD PRIMARY KEY (`isbn`,`user_id`),
-  ADD KEY `User_ID` (`user_id`);
+  ADD PRIMARY KEY (`isbn`,`reader_id`),
+  ADD KEY `reader_id` (`reader_id`);
 
 --
 -- Indexes for table `user_comments_review`
 --
 ALTER TABLE `user_comments_review`
-  ADD PRIMARY KEY (`user_id`,`review_id`),
-  ADD KEY `Review_Id` (`review_id`);
+  ADD PRIMARY KEY (`review_id`,`reader_id`),
+  ADD KEY `reader_id` (`reader_id`);
 
 --
 -- Indexes for table `user_follows_user`
 --
 ALTER TABLE `user_follows_user`
   ADD PRIMARY KEY (`follower_id`,`followed_id`),
-  ADD UNIQUE KEY `Follower_ID` (`follower_id`,`followed_id`),
-  ADD KEY `Followed_ID` (`followed_id`);
+  ADD KEY `followed_id` (`followed_id`);
 
 --
 -- Indexes for table `user_likes_genre`
 --
 ALTER TABLE `user_likes_genre`
-  ADD PRIMARY KEY (`user_id`,`genre_name`),
-  ADD KEY `Genre_name` (`genre_name`);
+  ADD PRIMARY KEY (`genre_name`,`reader_id`),
+  ADD KEY `reader_id` (`reader_id`);
 
 --
 -- Indexes for table `user_likes_review`
 --
 ALTER TABLE `user_likes_review`
-  ADD PRIMARY KEY (`user_id`,`review_Id`),
-  ADD KEY `Review_Id` (`review_Id`);
+  ADD PRIMARY KEY (`review_id`);
 
 --
 -- Indexes for table `user_reviews_book`
 --
 ALTER TABLE `user_reviews_book`
-  ADD PRIMARY KEY (`user_id`,`review_Id`,`isbn`),
-  ADD KEY `Review_Id` (`review_Id`),
-  ADD KEY `ISBN` (`isbn`);
+  ADD PRIMARY KEY (`review_id`,`isbn`,`reader_id`),
+  ADD KEY `isbn` (`isbn`),
+  ADD KEY `reader_id` (`reader_id`);
 
 --
 -- Indexes for table `user_social_media_url`
 --
 ALTER TABLE `user_social_media_url`
-  ADD PRIMARY KEY (`social_media_url`,`user_id`),
-  ADD KEY `User_ID` (`user_id`);
+  ADD PRIMARY KEY (`social_media_url`,`reader_id`),
+  ADD KEY `reader_id` (`reader_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT for table `admin`
---
-ALTER TABLE `admin`
-  MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `book_request`
---
-ALTER TABLE `book_request`
-  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `review`
---
-ALTER TABLE `review`
-  MODIFY `review_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- Constraints for dumped tables
@@ -446,89 +456,100 @@ ALTER TABLE `user`
 -- Constraints for table `author`
 --
 ALTER TABLE `author`
-  ADD CONSTRAINT `author_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `user` (`User_ID`);
+  ADD CONSTRAINT `author_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `user` (`user_id`);
+
+--
+-- Constraints for table `author_book_add_and_claim_request`
+--
+ALTER TABLE `author_book_add_and_claim_request`
+  ADD CONSTRAINT `author_book_add_and_claim_request_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `author` (`author_id`);
 
 --
 -- Constraints for table `author_writes_book`
 --
 ALTER TABLE `author_writes_book`
-  ADD CONSTRAINT `author_writes_book_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `author` (`User_ID`),
-  ADD CONSTRAINT `author_writes_book_ibfk_2` FOREIGN KEY (`ISBN`) REFERENCES `book` (`ISBN`);
+  ADD CONSTRAINT `author_writes_book_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `author` (`author_id`),
+  ADD CONSTRAINT `author_writes_book_ibfk_2` FOREIGN KEY (`isbn`) REFERENCES `book` (`isbn`);
 
 --
 -- Constraints for table `author_written_genre`
 --
 ALTER TABLE `author_written_genre`
-  ADD CONSTRAINT `author_written_genre_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `author` (`User_ID`),
-  ADD CONSTRAINT `author_written_genre_ibfk_2` FOREIGN KEY (`Genre_name`) REFERENCES `genre` (`Genre_name`);
+  ADD CONSTRAINT `author_written_genre_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `author` (`author_id`),
+  ADD CONSTRAINT `author_written_genre_ibfk_2` FOREIGN KEY (`genre_name`) REFERENCES `genre` (`genre_name`);
 
 --
 -- Constraints for table `book_belongs_to_genre`
 --
 ALTER TABLE `book_belongs_to_genre`
-  ADD CONSTRAINT `book_belongs_to_genre_ibfk_1` FOREIGN KEY (`Genre_name`) REFERENCES `genre` (`Genre_name`),
-  ADD CONSTRAINT `book_belongs_to_genre_ibfk_2` FOREIGN KEY (`ISBN`) REFERENCES `book` (`ISBN`);
+  ADD CONSTRAINT `book_belongs_to_genre_ibfk_1` FOREIGN KEY (`isbn`) REFERENCES `book` (`isbn`),
+  ADD CONSTRAINT `book_belongs_to_genre_ibfk_2` FOREIGN KEY (`genre_name`) REFERENCES `genre` (`genre_name`);
 
 --
 -- Constraints for table `book_language`
 --
 ALTER TABLE `book_language`
-  ADD CONSTRAINT `book_language_ibfk_1` FOREIGN KEY (`ISBN`) REFERENCES `book` (`ISBN`);
+  ADD CONSTRAINT `book_language_ibfk_1` FOREIGN KEY (`isbn`) REFERENCES `book` (`isbn`);
 
 --
 -- Constraints for table `book_request`
 --
 ALTER TABLE `book_request`
-  ADD CONSTRAINT `book_request_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `user` (`User_ID`);
+  ADD CONSTRAINT `book_request_ibfk_1` FOREIGN KEY (`reader_id`) REFERENCES `reader` (`reader_id`);
+
+--
+-- Constraints for table `reader`
+--
+ALTER TABLE `reader`
+  ADD CONSTRAINT `reader_ibfk_1` FOREIGN KEY (`reader_id`) REFERENCES `user` (`user_id`);
 
 --
 -- Constraints for table `user_books_read_status`
 --
 ALTER TABLE `user_books_read_status`
-  ADD CONSTRAINT `user_books_read_status_ibfk_1` FOREIGN KEY (`ISBN`) REFERENCES `book` (`ISBN`),
-  ADD CONSTRAINT `user_books_read_status_ibfk_2` FOREIGN KEY (`User_ID`) REFERENCES `user` (`User_ID`);
+  ADD CONSTRAINT `user_books_read_status_ibfk_1` FOREIGN KEY (`isbn`) REFERENCES `book` (`isbn`),
+  ADD CONSTRAINT `user_books_read_status_ibfk_2` FOREIGN KEY (`reader_id`) REFERENCES `reader` (`reader_id`);
 
 --
 -- Constraints for table `user_comments_review`
 --
 ALTER TABLE `user_comments_review`
-  ADD CONSTRAINT `user_comments_review_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `user` (`User_ID`),
-  ADD CONSTRAINT `user_comments_review_ibfk_2` FOREIGN KEY (`Review_Id`) REFERENCES `review` (`Review_Id`);
+  ADD CONSTRAINT `user_comments_review_ibfk_1` FOREIGN KEY (`review_id`) REFERENCES `review` (`review_id`),
+  ADD CONSTRAINT `user_comments_review_ibfk_2` FOREIGN KEY (`reader_id`) REFERENCES `reader` (`reader_id`);
 
 --
 -- Constraints for table `user_follows_user`
 --
 ALTER TABLE `user_follows_user`
-  ADD CONSTRAINT `user_follows_user_ibfk_1` FOREIGN KEY (`Follower_ID`) REFERENCES `user` (`User_ID`),
-  ADD CONSTRAINT `user_follows_user_ibfk_2` FOREIGN KEY (`Followed_ID`) REFERENCES `user` (`User_ID`);
+  ADD CONSTRAINT `user_follows_user_ibfk_1` FOREIGN KEY (`follower_id`) REFERENCES `user` (`user_id`),
+  ADD CONSTRAINT `user_follows_user_ibfk_2` FOREIGN KEY (`followed_id`) REFERENCES `user` (`user_id`);
 
 --
 -- Constraints for table `user_likes_genre`
 --
 ALTER TABLE `user_likes_genre`
-  ADD CONSTRAINT `user_likes_genre_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `user` (`User_ID`),
-  ADD CONSTRAINT `user_likes_genre_ibfk_2` FOREIGN KEY (`Genre_name`) REFERENCES `genre` (`Genre_name`);
+  ADD CONSTRAINT `user_likes_genre_ibfk_1` FOREIGN KEY (`genre_name`) REFERENCES `genre` (`genre_name`),
+  ADD CONSTRAINT `user_likes_genre_ibfk_2` FOREIGN KEY (`reader_id`) REFERENCES `reader` (`reader_id`);
 
 --
 -- Constraints for table `user_likes_review`
 --
 ALTER TABLE `user_likes_review`
-  ADD CONSTRAINT `user_likes_review_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `user` (`User_ID`),
-  ADD CONSTRAINT `user_likes_review_ibfk_2` FOREIGN KEY (`Review_Id`) REFERENCES `review` (`Review_Id`);
+  ADD CONSTRAINT `user_likes_review_ibfk_1` FOREIGN KEY (`review_id`) REFERENCES `review` (`review_id`);
 
 --
 -- Constraints for table `user_reviews_book`
 --
 ALTER TABLE `user_reviews_book`
-  ADD CONSTRAINT `user_reviews_book_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `user` (`User_ID`),
-  ADD CONSTRAINT `user_reviews_book_ibfk_2` FOREIGN KEY (`Review_Id`) REFERENCES `review` (`Review_Id`),
-  ADD CONSTRAINT `user_reviews_book_ibfk_3` FOREIGN KEY (`ISBN`) REFERENCES `book` (`ISBN`);
+  ADD CONSTRAINT `user_reviews_book_ibfk_1` FOREIGN KEY (`review_id`) REFERENCES `review` (`review_id`),
+  ADD CONSTRAINT `user_reviews_book_ibfk_2` FOREIGN KEY (`isbn`) REFERENCES `book` (`isbn`),
+  ADD CONSTRAINT `user_reviews_book_ibfk_3` FOREIGN KEY (`reader_id`) REFERENCES `reader` (`reader_id`);
 
 --
 -- Constraints for table `user_social_media_url`
 --
 ALTER TABLE `user_social_media_url`
-  ADD CONSTRAINT `user_social_media_url_ibfk_1` FOREIGN KEY (`User_ID`) REFERENCES `user` (`User_ID`);
+  ADD CONSTRAINT `user_social_media_url_ibfk_1` FOREIGN KEY (`reader_id`) REFERENCES `reader` (`reader_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

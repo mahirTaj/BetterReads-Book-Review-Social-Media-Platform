@@ -44,8 +44,22 @@
                 $row = mysqli_fetch_assoc($result); //returns next row as disctionary
                 $hash = $row["password"];
                 if (password_verify($password, $hash)) {
-                    $_SESSION["user_id"] = $row["user_id"];
-                    header("Location: profile.php");
+                     // Check if user is a reader
+                     $reader_check = "SELECT * FROM reader WHERE reader_id='$row[user_id]';";
+                     $reader_result = mysqli_query($conn, $reader_check);
+ 
+                     // Check if user is an author
+                     $author_check = "SELECT * FROM author WHERE author_id='$row[user_id]';";
+                     $author_result = mysqli_query($conn, $author_check);
+ 
+                     if (mysqli_num_rows($reader_result) > 0) {
+                         // User is a reader
+                         $_SESSION["user_id"] = $row["user_id"];
+                         header("Location: reader_profile.php");
+                     } elseif (mysqli_num_rows($author_result) > 0) {
+                         // User is an author
+                         $_SESSION["user_id"] = $row["user_id"];
+                         header("Location: author_profile.php");
                 }
                 else{
                     echo "Password is incorrect";
@@ -59,6 +73,7 @@
             echo "Please enter Email and password!";
         }
     }
+}
 ?>
 <?php
     include("footer.html"); 
