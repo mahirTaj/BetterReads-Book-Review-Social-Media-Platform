@@ -33,6 +33,7 @@
             <div>
                 <input type="submit" value="Register" name="reg">
             </div>
+            <p>fjghygung</p>
     </form>
 </body>
 </html>
