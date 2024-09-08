@@ -16,6 +16,7 @@
         <input type="submit" value="logout">
     </form>
     <h2>Admin Panel</h2>
+    <a href="book_add.php">Add Book</a>
 
 </body>
 </html>

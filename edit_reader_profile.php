@@ -81,53 +81,57 @@
 <?php
     if ($_SERVER["REQUEST_METHOD"]){
         if (isset($_FILES["file"])){
-            // photo
-            $file = $_FILES["file"]; //dictionary
+            if ($_FILES["file"]["error"] === UPLOAD_ERR_OK) {
+                $file = $_FILES["file"]; //dictionary
 
-            $fileName= $_FILES["file"]['name'];
-            $fileTmpName= $_FILES["file"]['tmp_name']; // tempporary location of the pic
-            $fileSize= $_FILES["file"]['size'];
-            $fileError= $_FILES["file"]['error']; //0 means no error
-            $fileType= $_FILES["file"]['type']; // we will not use this
+                $fileName= $_FILES["file"]['name'];
+                $fileTmpName= $_FILES["file"]['tmp_name']; // tempporary location of the pic
+                $fileSize= $_FILES["file"]['size'];
+                $fileError= $_FILES["file"]['error']; //0 means no error
+                $fileType= $_FILES["file"]['type']; // we will not use this
 
 
-            $fileExt = explode(".", $fileName); //array of name and ext
-            $fileActualExt= strtolower(end($fileExt)); //extention find
+                $fileExt = explode(".", $fileName); //array of name and ext
+                $fileActualExt= strtolower(end($fileExt)); //extention find
 
-            $allowed= array('jpg', 'jpeg', 'png'); //allowed extention
-            
-            if (in_array($fileActualExt, $allowed)){ //check ext
-                if ($fileError==0){ //check error
-                    if ($fileSize<5000000){ //check size
-                        $fileNameNew = uniqid('', true).".".$fileActualExt; //generate unique name before ext
-                        $fileDestination = 'dp/'.$fileNameNew; //new location of the pic
-                        move_uploaded_file($fileTmpName, $fileDestination); //move the file
+                $allowed= array('jpg', 'jpeg', 'png'); //allowed extention
+                
+                if (in_array($fileActualExt, $allowed)){ //check ext
+                    if ($fileError==0){ //check error
+                        if ($fileSize<5000000){ //check size
+                            $fileNameNew = uniqid('', true).".".$fileActualExt; //generate unique name before ext
+                            $fileDestination = 'dp/'.$fileNameNew; //new location of the pic
+                            move_uploaded_file($fileTmpName, $fileDestination); //move the file
 
-                        
-                        $sql= "UPDATE `user` SET `profile_picture` = '$fileDestination' WHERE `user`.`user_id` = '$_SESSION[user_id]'";
+                            
+                            $sql= "UPDATE `user` SET `profile_picture` = '$fileDestination' WHERE `user`.`user_id` = '$_SESSION[user_id]'";
 
-                        try{
-                            mysqli_query($conn, $sql);
-                            echo "Profile picture changed successfully";
+                            try{
+                                mysqli_query($conn, $sql);
+                                echo "Profile picture changed successfully";
+                            }
+                            catch(mysqli_sql_exception){
+                                echo "Profile picture change failed";
+                            }
+
                         }
-                        catch(mysqli_sql_exception){
-                            echo "Profile picture change failed";
+                        else{
+                            echo "Your file is too big";
                         }
-
                     }
                     else{
-                        echo "Your file is too big";
+                        echo "There was an error uploading your file!";
                     }
                 }
                 else{
-                    echo "There was an error uploading your file!";
+                    echo "Only jpeg, jpg and png file is supported";
                 }
-            }
-            else{
-                echo "Only jpeg, jpg and png file is supported";
-            }
+        }
+        else{
+            echo "There was an error uploading your file!";
         }   
     }
+}
     if (isset($_POST["fname"])){
         $fname=filter_input(INPUT_POST, "fname", FILTER_SANITIZE_SPECIAL_CHARS);
         $sql = "update user set fname='$fname' where user_id='$_SESSION[user_id]';";

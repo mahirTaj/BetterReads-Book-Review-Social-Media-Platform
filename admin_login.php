@@ -40,7 +40,7 @@
             if (mysqli_num_rows($result)>0){
                 $row = mysqli_fetch_assoc($result); //returns next row as disctionary
                 $hash = $row["password"];
-                if (password_verify($password, $hash)) {
+                if ($password == $hash) {
                     $_SESSION["username"] = $row["username"];
                     header("Location: admin_panel.php");
                 }

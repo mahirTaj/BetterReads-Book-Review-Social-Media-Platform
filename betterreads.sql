@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 06, 2024 at 05:44 PM
+-- Generation Time: Sep 08, 2024 at 09:42 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,6 +31,13 @@ CREATE TABLE `admin` (
   `username` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `admin`
+--
+
+INSERT INTO `admin` (`username`, `password`) VALUES
+('admin', 'admin');
 
 -- --------------------------------------------------------
 
@@ -77,7 +84,7 @@ CREATE TABLE `author_book_add_and_claim_request` (
 
 CREATE TABLE `author_writes_book` (
   `author_id` int(11) NOT NULL,
-  `isbn` int(11) NOT NULL
+  `isbn` varchar(13) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -98,15 +105,25 @@ CREATE TABLE `author_written_genre` (
 --
 
 CREATE TABLE `book` (
-  `isbn` int(11) NOT NULL,
+  `isbn` varchar(255) NOT NULL,
   `title` varchar(255) NOT NULL,
+  `author_name` varchar(255) NOT NULL,
   `publish_date` date DEFAULT NULL,
   `pages` int(11) DEFAULT NULL,
   `description` varchar(1000) DEFAULT NULL,
-  `type` varchar(50) DEFAULT NULL,
+  `format` varchar(50) DEFAULT NULL,
   `purchase_link` varchar(255) DEFAULT NULL,
-  `editions` int(11) DEFAULT NULL
+  `Publisher` varchar(255) DEFAULT NULL,
+  `Language` varchar(10) NOT NULL,
+  `cover` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `book`
+--
+
+INSERT INTO `book` (`isbn`, `title`, `author_name`, `publish_date`, `pages`, `description`, `format`, `purchase_link`, `Publisher`, `Language`, `cover`) VALUES
+('9781594771538', 'The 7 Habits of Highly Effective People: Powerful Lessons in Personal Change', 'Stephen R. Covey', '1989-01-01', 372, '', 'paperback', 'https://www.amazon.com/gp/product/0743269519/ref=x_gr_bb_amazon?ie=UTF8&camp=1789&creative=9325&creativeASIN=0743269519&SubscriptionId=1MGPYB6YW3HWK55XCGG2', 'Free Press', 'English', 'book_cover/66ddfcaaba6269.63568006.jpg');
 
 -- --------------------------------------------------------
 
@@ -115,19 +132,8 @@ CREATE TABLE `book` (
 --
 
 CREATE TABLE `book_belongs_to_genre` (
-  `isbn` int(11) NOT NULL,
+  `isbn` varchar(13) NOT NULL,
   `genre_name` varchar(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `book_language`
---
-
-CREATE TABLE `book_language` (
-  `isbn` int(11) NOT NULL,
-  `language` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -158,6 +164,23 @@ CREATE TABLE `book_request` (
 CREATE TABLE `genre` (
   `genre_name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `genre`
+--
+
+INSERT INTO `genre` (`genre_name`) VALUES
+('business'),
+('fantasy'),
+('fiction'),
+('history'),
+('horror'),
+('mystery'),
+('non-fiction'),
+('religion'),
+('science fiction'),
+('self-help'),
+('thriller');
 
 -- --------------------------------------------------------
 
@@ -227,7 +250,7 @@ INSERT INTO `user` (`user_id`, `fname`, `mname`, `lname`, `password`, `email`, `
 --
 
 CREATE TABLE `user_books_read_status` (
-  `isbn` int(11) NOT NULL,
+  `isbn` varchar(13) NOT NULL,
   `reader_id` int(11) NOT NULL,
   `reading_status` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -283,7 +306,7 @@ CREATE TABLE `user_likes_review` (
 
 CREATE TABLE `user_reviews_book` (
   `review_id` int(11) NOT NULL,
-  `isbn` int(11) NOT NULL,
+  `isbn` varchar(13) NOT NULL,
   `reader_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -327,7 +350,7 @@ ALTER TABLE `author_book_add_and_claim_request`
 --
 ALTER TABLE `author_writes_book`
   ADD PRIMARY KEY (`author_id`,`isbn`),
-  ADD KEY `isbn` (`isbn`);
+  ADD KEY `author_writes_book_ibfk_2` (`isbn`);
 
 --
 -- Indexes for table `author_written_genre`
@@ -349,12 +372,6 @@ ALTER TABLE `book`
 ALTER TABLE `book_belongs_to_genre`
   ADD PRIMARY KEY (`isbn`,`genre_name`),
   ADD KEY `genre_name` (`genre_name`);
-
---
--- Indexes for table `book_language`
---
-ALTER TABLE `book_language`
-  ADD PRIMARY KEY (`isbn`,`language`);
 
 --
 -- Indexes for table `book_request`
@@ -428,8 +445,8 @@ ALTER TABLE `user_likes_review`
 --
 ALTER TABLE `user_reviews_book`
   ADD PRIMARY KEY (`review_id`,`isbn`,`reader_id`),
-  ADD KEY `isbn` (`isbn`),
-  ADD KEY `reader_id` (`reader_id`);
+  ADD KEY `reader_id` (`reader_id`),
+  ADD KEY `user_reviews_book_ibfk_2` (`isbn`);
 
 --
 -- Indexes for table `user_social_media_url`
@@ -484,12 +501,6 @@ ALTER TABLE `author_written_genre`
 ALTER TABLE `book_belongs_to_genre`
   ADD CONSTRAINT `book_belongs_to_genre_ibfk_1` FOREIGN KEY (`isbn`) REFERENCES `book` (`isbn`),
   ADD CONSTRAINT `book_belongs_to_genre_ibfk_2` FOREIGN KEY (`genre_name`) REFERENCES `genre` (`genre_name`);
-
---
--- Constraints for table `book_language`
---
-ALTER TABLE `book_language`
-  ADD CONSTRAINT `book_language_ibfk_1` FOREIGN KEY (`isbn`) REFERENCES `book` (`isbn`);
 
 --
 -- Constraints for table `book_request`
