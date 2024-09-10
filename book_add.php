@@ -193,13 +193,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($_POST['genres'])) {
         $genres = $_POST['genres'];
         foreach ($genres as $genre_name) {
-            $sql = "INSERT INTO book_belongs_to_genre (isbn, genre_name) VALUES (?, ?)";
-            $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "ii", $isbn, $genre_name);
-            mysqli_stmt_execute($stmt);
+            // Check if the genre exists in the genre table
+            $sql_check_genre = "SELECT * FROM genre WHERE genre_name = ?";
+            $stmt_check_genre = mysqli_prepare($conn, $sql_check_genre);
+            mysqli_stmt_bind_param($stmt_check_genre, "s", $genre_name);
+            mysqli_stmt_execute($stmt_check_genre);
+            $result_genre = mysqli_stmt_get_result($stmt_check_genre);
+            
+            if (mysqli_num_rows($result_genre) > 0) {
+                // Genre exists, proceed with insertion
+                $sql_genre = "INSERT INTO book_belongs_to_genre (isbn, genre_name) VALUES (?, ?)";
+                $stmt = mysqli_prepare($conn, $sql_genre);
+                mysqli_stmt_bind_param($stmt, "ss", $isbn, $genre_name); // "ss" for string types
+                mysqli_stmt_execute($stmt);
+            } else {
+                // Genre does not exist, show an error message or handle it
+                echo "Error: Genre '$genre_name' does not exist in the genre table.";
+            }
         }
     }
-
+    
 }
 ?>
 

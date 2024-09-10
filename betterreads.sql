@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 08, 2024 at 09:42 PM
+-- Generation Time: Sep 10, 2024 at 03:07 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -105,7 +105,7 @@ CREATE TABLE `author_written_genre` (
 --
 
 CREATE TABLE `book` (
-  `isbn` varchar(255) NOT NULL,
+  `isbn` varchar(13) NOT NULL,
   `title` varchar(255) NOT NULL,
   `author_name` varchar(255) NOT NULL,
   `publish_date` date DEFAULT NULL,
@@ -123,7 +123,7 @@ CREATE TABLE `book` (
 --
 
 INSERT INTO `book` (`isbn`, `title`, `author_name`, `publish_date`, `pages`, `description`, `format`, `purchase_link`, `Publisher`, `Language`, `cover`) VALUES
-('9781594771538', 'The 7 Habits of Highly Effective People: Powerful Lessons in Personal Change', 'Stephen R. Covey', '1989-01-01', 372, '', 'paperback', 'https://www.amazon.com/gp/product/0743269519/ref=x_gr_bb_amazon?ie=UTF8&camp=1789&creative=9325&creativeASIN=0743269519&SubscriptionId=1MGPYB6YW3HWK55XCGG2', 'Free Press', 'English', 'book_cover/66ddfcaaba6269.63568006.jpg');
+('9781594771538', 'The 7 Habits of Highly Effective People: Powerful Lessons in Personal Change', 'Stephen R. Covey', '1989-01-01', 372, '', 'paperback', 'https://www.amazon.com/gp/product/0743269519/ref=x_gr_bb_amazon?ie=UTF8&camp=1789&creative=9325&creativeASIN=0743269519&SubscriptionId=1MGPYB6YW3HWK55XCGG2', 'Free Press', 'English', 'book_cover/66defb0a0bdde9.57634337.jpg');
 
 -- --------------------------------------------------------
 
@@ -135,6 +135,14 @@ CREATE TABLE `book_belongs_to_genre` (
   `isbn` varchar(13) NOT NULL,
   `genre_name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `book_belongs_to_genre`
+--
+
+INSERT INTO `book_belongs_to_genre` (`isbn`, `genre_name`) VALUES
+('9781594771538', 'non-fiction'),
+('9781594771538', 'self-help');
 
 -- --------------------------------------------------------
 
