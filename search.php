@@ -94,8 +94,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit"])) {
 
                     } elseif ($search_type == 'people') {
                         $full_name = trim("{$row["fname"]} {$row["mname"]} {$row["lname"]}");
-                        echo "<img src='{$row["profile_picture"]}' alt='Profile Picture'>";
-                        echo "<h3><a height=100 href='visit_reader.php?reader_id={$row["user_id"]}'>{$full_name}</a></h3>";
+                        echo "<img height=100 src='{$row["profile_picture"]}' alt='Profile Picture'>";
+                        echo "<h3><a  href='visit_reader.php?reader_id={$row["user_id"]}'>{$full_name}</a></h3>";
                     }
 
                     echo "</div>";

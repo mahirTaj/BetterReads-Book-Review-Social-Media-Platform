@@ -5,40 +5,60 @@
 
     // Check if a reader is selected
     if (isset($_GET['author_id'])) {
-        $reader_id = intval($_GET['author_id']);
+        $author_id = intval($_GET['author_id']);
         $visitor_id = $_SESSION['user_id']; // Assuming you store the logged-in user ID in session
 
-        // Handle the follow button submission
+        // Handle the follow/unfollow button submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $follower_id = intval($_POST['follower_id']);
             $followed_id = intval($_POST['followed_id']);
 
-            // Ensure that the visitor cannot follow themselves
-            if ($follower_id !== $followed_id) {
-                // Check if the follower is already following the user
-                $check_stmt = $conn->prepare("SELECT * FROM user_follows_user WHERE follower_id = ? AND followed_id = ?");
-                $check_stmt->bind_param("ii", $follower_id, $followed_id);
-                $check_stmt->execute();
-                $result = $check_stmt->get_result();
+            if (isset($_POST['follow'])) {
+                // Ensure that the visitor cannot follow themselves
+                if ($follower_id !== $followed_id) {
+                    // Check if the follower is already following the user
+                    $check_stmt = $conn->prepare("SELECT * FROM user_follows_user WHERE follower_id = ? AND followed_id = ?");
+                    $check_stmt->bind_param("ii", $follower_id, $followed_id);
+                    $check_stmt->execute();
+                    $result = $check_stmt->get_result();
 
-                if ($result->num_rows === 0) {
-                    // Insert follow relationship
-                    $stmt = $conn->prepare("INSERT INTO user_follows_user (follower_id, followed_id) VALUES (?, ?)");
+                    if ($result->num_rows === 0) {
+                        // Insert follow relationship
+                        $stmt = $conn->prepare("INSERT INTO user_follows_user (follower_id, followed_id) VALUES (?, ?)");
+                        $stmt->bind_param("ii", $follower_id, $followed_id);
+
+                        if ($stmt->execute()) {
+                            echo "<p>You are now following this user!</p>";
+                        } else {
+                            echo "<p>Error: Could not follow user.</p>";
+                        }
+                        $stmt->close();
+                    } else {
+                        echo "<p>You are already following this user.</p>";
+                    }
+
+                    $check_stmt->close();
+                } else {
+                    echo "<p>You cannot follow yourself.</p>";
+                }
+            }
+
+            if (isset($_POST['unfollow'])) {
+                // Ensure that the visitor cannot unfollow themselves
+                if ($follower_id !== $followed_id) {
+                    // Delete the follow relationship
+                    $stmt = $conn->prepare("DELETE FROM user_follows_user WHERE follower_id = ? AND followed_id = ?");
                     $stmt->bind_param("ii", $follower_id, $followed_id);
 
                     if ($stmt->execute()) {
-                        echo "<p>You are now following this user!</p>";
+                        echo "<p>You have unfollowed this user.</p>";
                     } else {
-                        echo "<p>Error: Could not follow user.</p>";
+                        echo "<p>Error: Could not unfollow user.</p>";
                     }
                     $stmt->close();
                 } else {
-                    echo "<p>You are already following this user.</p>";
+                    echo "<p>You cannot unfollow yourself.</p>";
                 }
-
-                $check_stmt->close();
-            } else {
-                echo "<p>You cannot follow yourself.</p>";
             }
         }
 
@@ -47,7 +67,7 @@
                                 FROM user u
                                 INNER JOIN author a ON u.user_id = a.author_id
                                 WHERE u.user_id = ?");
-        $stmt->bind_param("i", $reader_id);
+        $stmt->bind_param("i", $author_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -75,18 +95,25 @@
 
             // Check if the visitor is already following the reader
             $follow_stmt = $conn->prepare("SELECT * FROM user_follows_user WHERE follower_id = ? AND followed_id = ?");
-            $follow_stmt->bind_param("ii", $visitor_id, $reader_id);
+            $follow_stmt->bind_param("ii", $visitor_id, $author_id);
             $follow_stmt->execute();
             $follow_result = $follow_stmt->get_result();
 
-            if ($follow_result->num_rows === 0 && $visitor_id != $reader_id) {
+            if ($follow_result->num_rows === 0 && $visitor_id != $author_id) {
                 // If not following and visitor is not viewing their own profile, show the follow button
                 echo "<form method='POST'>
                         <input type='hidden' name='follower_id' value='$visitor_id'>
-                        <input type='hidden' name='followed_id' value='$reader_id'>
-                        <button type='submit'>Follow</button>
+                        <input type='hidden' name='followed_id' value='$author_id'>
+                        <button type='submit' name='follow'>Follow</button>
                       </form>";
-            } elseif ($visitor_id == $reader_id) {
+            } elseif ($follow_result->num_rows > 0 && $visitor_id != $author_id) {
+                // If already following, show the unfollow button
+                echo "<form method='POST'>
+                        <input type='hidden' name='follower_id' value='$visitor_id'>
+                        <input type='hidden' name='followed_id' value='$author_id'>
+                        <button type='submit' name='unfollow'>Unfollow</button>
+                      </form>";
+            } elseif ($visitor_id == $author_id) {
                 echo "<p>This is your own profile.</p>";
             } else {
                 echo "<p>Following</p>";
