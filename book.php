@@ -113,62 +113,88 @@
 
 
 
-            // Fetch and display reviews
-            echo "<h2>Reviews for this book:</h2>";
+        // Fetch and display reviews
+        echo "<h2>Reviews for this book:</h2>";
 
-            // Fetch reviews for the book
-            $stmt_reviews = $conn->prepare("
+        // First, fetch the user's review, if available
+        $stmt_user_review = $conn->prepare("
             SELECT r.review_id, r.description, r.rating, r.posting_date, u.user_id, 
                 CONCAT(u.fname, ' ', u.lname) AS full_name
             FROM review r
             JOIN user_reviews_book urb ON r.review_id = urb.review_id
             JOIN reader rd ON urb.reader_id = rd.reader_id
             JOIN user u ON rd.reader_id = u.user_id
-            WHERE urb.isbn = ?
-");
-            $stmt_reviews->bind_param("i", $book_isbn);
-            $stmt_reviews->execute();
-            $result_reviews = $stmt_reviews->get_result();
+            WHERE urb.isbn = ? AND u.user_id = ?
+        ");
+        $stmt_user_review->bind_param("ii", $book_isbn, $user_id);
+        $stmt_user_review->execute();
+        $result_user_review = $stmt_user_review->get_result();
 
-            if ($result_reviews->num_rows > 0) {
-                while ($review = $result_reviews->fetch_assoc()) {
-                    $is_user_review = $review['user_id'] == $user_id;
+        // Display the user's review at the top
+        if ($result_user_review->num_rows > 0) {
+            $review = $result_user_review->fetch_assoc();
 
-                    echo "<div style='border:1px solid #ccc; padding:10px; margin:10px 0;'>";
-                    echo "<p><strong>Username:</strong> {$review['full_name']}</p>";
-                    echo "<p><strong>Rating:</strong> {$review['rating']}/5</p>";
-                    echo "<p><strong>Review:</strong> " . (!empty($review['description']) ? $review['description'] : "No review provided.") . "</p>";
-                    echo "<p><strong>Posted on:</strong> {$review['posting_date']}</p>";
+            echo "<div style='border:1px solid #ccc; padding:10px; margin:10px 0; background-color: #f9f9f9;'>";
+            echo "<p><strong>Your Review</strong></p>";
+            echo "<p><strong>Username:</strong> {$review['full_name']}</p>";
+            echo "<p><strong>Rating:</strong> {$review['rating']}/5</p>";
+            echo "<p><strong>Review:</strong> " . (!empty($review['description']) ? $review['description'] : "No review provided.") . "</p>";
+            echo "<p><strong>Posted on:</strong> {$review['posting_date']}</p>";
 
-                    if ($is_user_review) {
-                        // If this review is by the logged-in user, show the edit and delete options
-                        echo "<form action='' method='POST'>
-                            <label for='rating_edit'>Edit Rating:</label>
-                            <select name='rating_edit' id='rating_edit' required>
-                                <option value='1' " . ($review['rating'] == 1 ? "selected" : "") . ">1</option>
-                                <option value='2' " . ($review['rating'] == 2 ? "selected" : "") . ">2</option>
-                                <option value='3' " . ($review['rating'] == 3 ? "selected" : "") . ">3</option>
-                                <option value='4' " . ($review['rating'] == 4 ? "selected" : "") . ">4</option>
-                                <option value='5' " . ($review['rating'] == 5 ? "selected" : "") . ">5</option>
-                            </select><br>
-                    
-                            <label for='review_edit'>Edit Review (optional):</label><br>
-                            <textarea name='review_edit' id='review_edit' rows='5' cols='50'>{$review['description']}</textarea><br><br>
-                    
-                            <input type='hidden' name='review_id' value='{$review['review_id']}'>
-                            <input type='submit' name='edit_review' value='Update Review'>
-                            <input type='submit' name='delete_review' value='Delete Review' onclick=\"return confirm('Are you sure you want to delete this review?');\">
-                        </form>";
-                    }
-                    
+            // Show the edit and delete options for the user's review
+            echo "<form action='' method='POST'>
+                <label for='rating_edit'>Edit Rating:</label>
+                <select name='rating_edit' id='rating_edit' required>
+                    <option value='1' " . ($review['rating'] == 1 ? "selected" : "") . ">1</option>
+                    <option value='2' " . ($review['rating'] == 2 ? "selected" : "") . ">2</option>
+                    <option value='3' " . ($review['rating'] == 3 ? "selected" : "") . ">3</option>
+                    <option value='4' " . ($review['rating'] == 4 ? "selected" : "") . ">4</option>
+                    <option value='5' " . ($review['rating'] == 5 ? "selected" : "") . ">5</option>
+                </select><br>
 
-                    echo "</div>";
-                }
-            } else {
-                echo "<p>No reviews found for this book.</p>";
+                <label for='review_edit'>Edit Review (optional):</label><br>
+                <textarea name='review_edit' id='review_edit' rows='5' cols='50'>{$review['description']}</textarea><br><br>
+
+                <input type='hidden' name='review_id' value='{$review['review_id']}'>
+                <input type='submit' name='edit_review' value='Update Review'>
+                <input type='submit' name='delete_review' value='Delete Review' onclick=\"return confirm('Are you sure you want to delete this review?');\">
+            </form>";
+            echo "</div>";
+        } else {
+            echo "<p>You have not reviewed this book yet.</p>";
+        }
+
+        $stmt_user_review->close();
+
+        // Now, fetch and display all other reviews excluding the user's review
+        $stmt_reviews = $conn->prepare("
+            SELECT r.review_id, r.description, r.rating, r.posting_date, u.user_id, 
+                CONCAT(u.fname, ' ', u.lname) AS full_name
+            FROM review r
+            JOIN user_reviews_book urb ON r.review_id = urb.review_id
+            JOIN reader rd ON urb.reader_id = rd.reader_id
+            JOIN user u ON rd.reader_id = u.user_id
+            WHERE urb.isbn = ? AND u.user_id != ?
+        ");
+        $stmt_reviews->bind_param("ii", $book_isbn, $user_id);
+        $stmt_reviews->execute();
+        $result_reviews = $stmt_reviews->get_result();
+
+        if ($result_reviews->num_rows > 0) {
+            while ($review = $result_reviews->fetch_assoc()) {
+                echo "<div style='border:1px solid #ccc; padding:10px; margin:10px 0;'>";
+                echo "<p><strong>Username:</strong> {$review['full_name']}</p>";
+                echo "<p><strong>Rating:</strong> {$review['rating']}/5</p>";
+                echo "<p><strong>Review:</strong> " . (!empty($review['description']) ? $review['description'] : "No review provided.") . "</p>";
+                echo "<p><strong>Posted on:</strong> {$review['posting_date']}</p>";
+                echo "</div>";
             }
+        } else {
+            echo "<p>No reviews found for this book.</p>";
+        }
 
-            $stmt_reviews->close();
+        $stmt_reviews->close();
+
 
             
             // Process the review submission
