@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 13, 2024 at 07:07 AM
+-- Generation Time: Sep 13, 2024 at 07:58 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -228,7 +228,7 @@ CREATE TABLE `review` (
 
 INSERT INTO `review` (`review_id`, `rating`, `posting_date`, `description`) VALUES
 (15, 5, '2024-09-13', 'best book ever!!!!'),
-(19, 4, '2024-09-13', 'This book changed my life');
+(21, 4, '2024-09-13', 'This book changed my life!!!');
 
 -- --------------------------------------------------------
 
@@ -311,7 +311,8 @@ CREATE TABLE `user_likes_genre` (
 --
 
 CREATE TABLE `user_likes_review` (
-  `review_id` int(11) NOT NULL
+  `review_id` int(11) NOT NULL,
+  `reader_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -332,7 +333,7 @@ CREATE TABLE `user_reviews_book` (
 
 INSERT INTO `user_reviews_book` (`review_id`, `isbn`, `reader_id`) VALUES
 (15, '9781594771538', 16),
-(19, '9781594771538', 14);
+(21, '9781594771538', 14);
 
 -- --------------------------------------------------------
 
@@ -462,7 +463,8 @@ ALTER TABLE `user_likes_genre`
 -- Indexes for table `user_likes_review`
 --
 ALTER TABLE `user_likes_review`
-  ADD PRIMARY KEY (`review_id`);
+  ADD PRIMARY KEY (`review_id`,`reader_id`) USING BTREE,
+  ADD KEY `user_likes_review_ibfk_2` (`reader_id`);
 
 --
 -- Indexes for table `user_reviews_book`
@@ -487,7 +489,7 @@ ALTER TABLE `user_social_media_url`
 -- AUTO_INCREMENT for table `review`
 --
 ALTER TABLE `review`
-  MODIFY `review_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `review_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `user`
@@ -576,7 +578,8 @@ ALTER TABLE `user_likes_genre`
 -- Constraints for table `user_likes_review`
 --
 ALTER TABLE `user_likes_review`
-  ADD CONSTRAINT `user_likes_review_ibfk_1` FOREIGN KEY (`review_id`) REFERENCES `review` (`review_id`);
+  ADD CONSTRAINT `user_likes_review_ibfk_1` FOREIGN KEY (`review_id`) REFERENCES `review` (`review_id`),
+  ADD CONSTRAINT `user_likes_review_ibfk_2` FOREIGN KEY (`reader_id`) REFERENCES `reader` (`reader_id`);
 
 --
 -- Constraints for table `user_reviews_book`
