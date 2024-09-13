@@ -17,6 +17,7 @@
     </form>
 
     <a href="edit_reader_profile.php">Edit Profile</a>
+    <a href="search.php">Search Books</a>
 </body>
 </html>
 
