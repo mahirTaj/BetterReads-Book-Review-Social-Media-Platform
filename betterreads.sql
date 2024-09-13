@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 10, 2024 at 03:07 PM
+-- Generation Time: Sep 13, 2024 at 07:07 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -56,7 +56,7 @@ CREATE TABLE `author` (
 --
 
 INSERT INTO `author` (`author_id`, `biography`, `personal_website`) VALUES
-(15, NULL, NULL);
+(17, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -113,8 +113,8 @@ CREATE TABLE `book` (
   `description` varchar(1000) DEFAULT NULL,
   `format` varchar(50) DEFAULT NULL,
   `purchase_link` varchar(255) DEFAULT NULL,
-  `Publisher` varchar(255) DEFAULT NULL,
-  `Language` varchar(10) NOT NULL,
+  `publisher` varchar(255) DEFAULT NULL,
+  `language` varchar(10) NOT NULL,
   `cover` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -122,7 +122,7 @@ CREATE TABLE `book` (
 -- Dumping data for table `book`
 --
 
-INSERT INTO `book` (`isbn`, `title`, `author_name`, `publish_date`, `pages`, `description`, `format`, `purchase_link`, `Publisher`, `Language`, `cover`) VALUES
+INSERT INTO `book` (`isbn`, `title`, `author_name`, `publish_date`, `pages`, `description`, `format`, `purchase_link`, `publisher`, `language`, `cover`) VALUES
 ('9781594771538', 'The 7 Habits of Highly Effective People: Powerful Lessons in Personal Change', 'Stephen R. Covey', '1989-01-01', 372, '', 'paperback', 'https://www.amazon.com/gp/product/0743269519/ref=x_gr_bb_amazon?ie=UTF8&camp=1789&creative=9325&creativeASIN=0743269519&SubscriptionId=1MGPYB6YW3HWK55XCGG2', 'Free Press', 'English', 'book_cover/66defb0a0bdde9.57634337.jpg');
 
 -- --------------------------------------------------------
@@ -197,15 +197,17 @@ INSERT INTO `genre` (`genre_name`) VALUES
 --
 
 CREATE TABLE `reader` (
-  `reader_id` int(11) NOT NULL
+  `reader_id` int(11) NOT NULL,
+  `about_me` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `reader`
 --
 
-INSERT INTO `reader` (`reader_id`) VALUES
-(14);
+INSERT INTO `reader` (`reader_id`, `about_me`) VALUES
+(14, ''),
+(16, '');
 
 -- --------------------------------------------------------
 
@@ -216,12 +218,17 @@ INSERT INTO `reader` (`reader_id`) VALUES
 CREATE TABLE `review` (
   `review_id` int(11) NOT NULL,
   `rating` int(11) NOT NULL,
-  `posting_date` date NOT NULL,
-  `spoilers` int(11) NOT NULL,
-  `description` varchar(1000) DEFAULT NULL,
-  `started_reading` date DEFAULT NULL,
-  `finished_reading` date DEFAULT NULL
+  `posting_date` date NOT NULL DEFAULT current_timestamp(),
+  `description` varchar(1000) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `review`
+--
+
+INSERT INTO `review` (`review_id`, `rating`, `posting_date`, `description`) VALUES
+(15, 5, '2024-09-13', 'best book ever!!!!'),
+(19, 4, '2024-09-13', 'This book changed my life');
 
 -- --------------------------------------------------------
 
@@ -248,8 +255,9 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`user_id`, `fname`, `mname`, `lname`, `password`, `email`, `joining_date`, `profile_picture`, `gender`, `country`, `date_of_birth`) VALUES
-(14, 'Mahir', 'Tajwar', 'Rahman', '$2y$10$aNh15LlPi63UAhNSbiau/.LN04h.OEfhzPC21ki5f7AaRa2xm8NTq', 'mahir19800@gmail.com', '2024-09-06 21:12:12', NULL, NULL, NULL, NULL),
-(15, 'Arif', 'Azad', 'Azad', '$2y$10$9vwDnktHynAOO4nFR9dGUuVNqNLgMz7aODX35je9hznyVXZP1J1DS', 'arif11@gmail.com', '2024-09-06 21:15:38', NULL, NULL, NULL, NULL);
+(14, 'Mahir', 'Tajwar', 'Rahman', '$2y$10$aNh15LlPi63UAhNSbiau/.LN04h.OEfhzPC21ki5f7AaRa2xm8NTq', 'mahir19800@gmail.com', '2024-09-06 21:12:12', 'dp/66e3bf5264e216.71843876.jpg', 'male', 'Bangladesh', '2001-09-04'),
+(16, 'Abrar', '', 'Samin', '$2y$10$hA2ohLbnmqAQcx9e.CbYgOFcHpfJOlARyZtKu8jXbydFMsSLYPX1G', 'abrar@gmail.com', '2024-09-13 09:05:48', NULL, NULL, NULL, NULL),
+(17, 'Arif', '', 'Azad', '$2y$10$Z8IoXlDhKC59tlLzRg16Kekb.2y6MFdcRuj3jWGMcDgRSKCsuvUyW', 'arif@gmail.com', '2024-09-13 10:48:19', 'dp/66e3c5cb7d9a01.48735381.jpg', 'male', 'Bangladesh', '1971-12-16');
 
 -- --------------------------------------------------------
 
@@ -317,6 +325,14 @@ CREATE TABLE `user_reviews_book` (
   `isbn` varchar(13) NOT NULL,
   `reader_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_reviews_book`
+--
+
+INSERT INTO `user_reviews_book` (`review_id`, `isbn`, `reader_id`) VALUES
+(15, '9781594771538', 16),
+(19, '9781594771538', 14);
 
 -- --------------------------------------------------------
 
@@ -468,10 +484,16 @@ ALTER TABLE `user_social_media_url`
 --
 
 --
+-- AUTO_INCREMENT for table `review`
+--
+ALTER TABLE `review`
+  MODIFY `review_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- Constraints for dumped tables

@@ -16,7 +16,7 @@
         <input type="submit" value="logout">
     </form>
 
-    <a href="edit_profile.php">Edit Profile</a>
+    <a href="edit_reader_profile.php">Edit Profile</a>
 </body>
 </html>
 
@@ -33,7 +33,7 @@
 <?php
     // echo "<br>Hi {$_SESSION["username"]} this is your homepage<br>";
     
-    $sql = "select * from user where user_id='$_SESSION[user_id]';";
+    $sql = "SELECT * from user where user_id='$_SESSION[user_id]';";
 
 
     $result=mysqli_query($conn, $sql); //returns object
@@ -47,6 +47,18 @@
         }
         if (!empty($row["lname"])) {
             echo $row["lname"]."<br>";
+        }
+        if (!empty($row["date_of_birth"])) {
+            echo $row["date_of_birth"]."<br>";
+        }
+        if (!empty($row["country"])) {
+            echo $row["country"]."<br>";
+        }
+        if (!empty($row["gender"])) {
+            echo $row["gender"]."<br>";
+        }
+        if (!empty($row["email"])) {
+            echo $row["email"]."<br>";
         }
         echo $row["joining_date"]."<br>";
         $imagePath=$row["profile_picture"];

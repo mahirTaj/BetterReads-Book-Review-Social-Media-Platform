@@ -18,6 +18,8 @@
         <input type="text" name="search" id="search" placeholder="Search by Book Title, Author or ISBN">
         <input type="submit" value="Search" name="submit">
     </form>
+
+    
 </body>
 </html>
 
@@ -39,7 +41,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit"])) {
             while ($row = $result->fetch_assoc()) {
                 echo "<div>";
                 echo "<img src='{$row["cover"]}' alt=''>";
-                echo "<h3>{$row["title"]}</h3>";
+                // Create an anchor link for the book title
+                echo "<h3><a href='book.php?isbn={$row["isbn"]}'>{$row["title"]}</a></h3>";
                 echo "<p>{$row["author_name"]}</p>";
                 echo "<p>{$row["publish_date"]}</p>";
                 echo "<p><a href='{$row["purchase_link"]}'>Buy</a></p>";

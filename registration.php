@@ -76,29 +76,28 @@
                 echo "Passwords do not match";
             }
             else{
-                // Split the full name into parts based on spaces
-                $nameParts = explode(" ", $name);
+            // Split the full name into parts based on spaces
+            $nameParts = explode(" ", $name);
 
-                // The first part is the first name
-                $firstName = $nameParts[0];
+            // The first part is the first name
+            $firstName = $nameParts[0];
 
-                // Check if there is a second part for the middle name
-                if (isset($nameParts[1])) {
-                    $middleName = $nameParts[1];
-                } else {
-                    $middleName = ""; // If not, leave the middle name empty
-                }
+            // Check if there are exactly two parts, assign the second part as last name
+            if (count($nameParts) == 2) {
+                $middleName = ""; // No middle name in this case
+                $lastName = $nameParts[1]; // Second part is the last name
+            } 
+            // If there are more than two parts, assign second part as middle name and rest as last name
+            elseif (count($nameParts) > 2) {
+                $middleName = $nameParts[1]; // Second part is middle name
+                $lastName = implode(" ", array_slice($nameParts, 2)); // Combine the rest as last name
+            } 
+            // If there's only one part (just first name)
+            else {
+                $middleName = "";
+                $lastName = "";
+            }
 
-                // Combine any remaining parts as the last name
-                $lastName = ""; // Initialize last name as empty
-                if (count($nameParts) > 2) {
-                    for ($i = 2; $i < count($nameParts); $i++) {
-                        $lastName .= $nameParts[$i] . " "; // Add each part to the last name
-                    }
-                    $lastName = trim($lastName); // Remove any extra spaces at the end
-                } else {
-                    $lastName = $nameParts[1]; // If there are only two parts, assign the second part as the last name
-                }
 
 
 
