@@ -166,31 +166,34 @@
 
         $stmt_user_review->close();
 
-        // Now, fetch and display all other reviews excluding the user's review
+        // Fetch and display all other reviews excluding the user's review
         $stmt_reviews = $conn->prepare("
-            SELECT r.review_id, r.description, r.rating, r.posting_date, u.user_id, 
-                CONCAT(u.fname, ' ', u.lname) AS full_name
-            FROM review r
-            JOIN user_reviews_book urb ON r.review_id = urb.review_id
-            JOIN reader rd ON urb.reader_id = rd.reader_id
-            JOIN user u ON rd.reader_id = u.user_id
-            WHERE urb.isbn = ? AND u.user_id != ?
+        SELECT r.review_id, r.description, r.rating, r.posting_date, u.user_id, 
+            CONCAT(u.fname, ' ', u.lname) AS full_name
+        FROM review r
+        JOIN user_reviews_book urb ON r.review_id = urb.review_id
+        JOIN reader rd ON urb.reader_id = rd.reader_id
+        JOIN user u ON rd.reader_id = u.user_id
+        WHERE urb.isbn = ? AND u.user_id != ?
         ");
         $stmt_reviews->bind_param("ii", $book_isbn, $user_id);
         $stmt_reviews->execute();
         $result_reviews = $stmt_reviews->get_result();
 
         if ($result_reviews->num_rows > 0) {
-            while ($review = $result_reviews->fetch_assoc()) {
-                echo "<div style='border:1px solid #ccc; padding:10px; margin:10px 0;'>";
-                echo "<p><strong>Username:</strong> {$review['full_name']}</p>";
-                echo "<p><strong>Rating:</strong> {$review['rating']}/5</p>";
-                echo "<p><strong>Review:</strong> " . (!empty($review['description']) ? $review['description'] : "No review provided.") . "</p>";
-                echo "<p><strong>Posted on:</strong> {$review['posting_date']}</p>";
-                echo "</div>";
-            }
+        while ($review = $result_reviews->fetch_assoc()) {
+            // Make the username a clickable link to the reader's profile page
+            $profile_link = "visit_reader.php?reader_id={$review['user_id']}";
+            
+            echo "<div style='border:1px solid #ccc; padding:10px; margin:10px 0;'>";
+            echo "<p><strong>Username:</strong> <a href='{$profile_link}'>{$review['full_name']}</a></p>";
+            echo "<p><strong>Rating:</strong> {$review['rating']}/5</p>";
+            echo "<p><strong>Review:</strong> " . (!empty($review['description']) ? $review['description'] : "No review provided.") . "</p>";
+            echo "<p><strong>Posted on:</strong> {$review['posting_date']}</p>";
+            echo "</div>";
+        }
         } else {
-            echo "<p>No reviews found for this book.</p>";
+        echo "<p>No reviews found for this book.</p>";
         }
 
         $stmt_reviews->close();
