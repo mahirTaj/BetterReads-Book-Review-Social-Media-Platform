@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 13, 2024 at 07:58 AM
+-- Generation Time: Sep 15, 2024 at 09:17 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -228,7 +228,7 @@ CREATE TABLE `review` (
 
 INSERT INTO `review` (`review_id`, `rating`, `posting_date`, `description`) VALUES
 (15, 5, '2024-09-13', 'best book ever!!!!'),
-(21, 4, '2024-09-13', 'This book changed my life!!!');
+(21, 4, '2024-09-13', 'This book changed my life!!!!');
 
 -- --------------------------------------------------------
 
@@ -278,9 +278,20 @@ CREATE TABLE `user_books_read_status` (
 --
 
 CREATE TABLE `user_comments_review` (
+  `comment_id` int(11) NOT NULL,
   `review_id` int(11) NOT NULL,
-  `reader_id` int(11) NOT NULL
+  `reader_id` int(11) NOT NULL,
+  `comment` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_comments_review`
+--
+
+INSERT INTO `user_comments_review` (`comment_id`, `review_id`, `reader_id`, `comment`) VALUES
+(4, 15, 14, 'You are correct!!!!'),
+(5, 15, 14, 'absolutely'),
+(6, 15, 14, 'hi');
 
 -- --------------------------------------------------------
 
@@ -292,6 +303,14 @@ CREATE TABLE `user_follows_user` (
   `follower_id` int(11) NOT NULL,
   `followed_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_follows_user`
+--
+
+INSERT INTO `user_follows_user` (`follower_id`, `followed_id`) VALUES
+(14, 16),
+(14, 17);
 
 -- --------------------------------------------------------
 
@@ -314,6 +333,13 @@ CREATE TABLE `user_likes_review` (
   `review_id` int(11) NOT NULL,
   `reader_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_likes_review`
+--
+
+INSERT INTO `user_likes_review` (`review_id`, `reader_id`) VALUES
+(15, 14);
 
 -- --------------------------------------------------------
 
@@ -442,7 +468,7 @@ ALTER TABLE `user_books_read_status`
 -- Indexes for table `user_comments_review`
 --
 ALTER TABLE `user_comments_review`
-  ADD PRIMARY KEY (`review_id`,`reader_id`),
+  ADD PRIMARY KEY (`comment_id`),
   ADD KEY `reader_id` (`reader_id`);
 
 --
@@ -496,6 +522,12 @@ ALTER TABLE `review`
 --
 ALTER TABLE `user`
   MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT for table `user_comments_review`
+--
+ALTER TABLE `user_comments_review`
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables
@@ -552,13 +584,6 @@ ALTER TABLE `reader`
 ALTER TABLE `user_books_read_status`
   ADD CONSTRAINT `user_books_read_status_ibfk_1` FOREIGN KEY (`isbn`) REFERENCES `book` (`isbn`),
   ADD CONSTRAINT `user_books_read_status_ibfk_2` FOREIGN KEY (`reader_id`) REFERENCES `reader` (`reader_id`);
-
---
--- Constraints for table `user_comments_review`
---
-ALTER TABLE `user_comments_review`
-  ADD CONSTRAINT `user_comments_review_ibfk_1` FOREIGN KEY (`review_id`) REFERENCES `review` (`review_id`),
-  ADD CONSTRAINT `user_comments_review_ibfk_2` FOREIGN KEY (`reader_id`) REFERENCES `reader` (`reader_id`);
 
 --
 -- Constraints for table `user_follows_user`

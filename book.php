@@ -59,7 +59,7 @@
 
             // Calculate and display average rating
             $stmt_avg_rating = $conn->prepare("
-                SELECT AVG(r.rating) AS avg_rating
+                SELECT AVG(r.rating) AS avg_rating, COUNT(r.rating) AS total_ratings
                 FROM review r
                 JOIN user_reviews_book urb ON r.review_id = urb.review_id
                 WHERE urb.isbn = ?
@@ -70,8 +70,26 @@
             if ($result_avg->num_rows > 0) {
                 $row_avg = $result_avg->fetch_assoc();
                 echo "<p>Average Rating: " . number_format($row_avg['avg_rating'], 2) . "</p>";
+                echo "{$row_avg['total_ratings']} ratings";
             } else {
-                echo "<p>No ratings yet for this book.</p>";
+                echo "No ratings yet for this book.";
+            }
+
+            // Count how many reviews have descriptions
+            $stmt_review_count = $conn->prepare("
+                SELECT COUNT(r.review_id) AS total_reviews
+                FROM review r
+                JOIN user_reviews_book urb ON r.review_id = urb.review_id
+                WHERE urb.isbn = ? AND r.description IS NOT NULL AND r.description != ''
+            ");
+            $stmt_review_count->bind_param("i", $book_isbn);
+            $stmt_review_count->execute();
+            $result_review_count = $stmt_review_count->get_result();
+            if ($result_review_count->num_rows > 0) {
+                $row_reviews = $result_review_count->fetch_assoc();
+                echo " . {$row_reviews['total_reviews']} reviews";
+            } else {
+                echo " . No reviews yet for this book.\n";
             }
 
             // Check if user has already reviewed the book
@@ -168,32 +186,130 @@
 
         // Fetch and display all other reviews excluding the user's review
         $stmt_reviews = $conn->prepare("
-        SELECT r.review_id, r.description, r.rating, r.posting_date, u.user_id, 
-            CONCAT(u.fname, ' ', u.lname) AS full_name
-        FROM review r
-        JOIN user_reviews_book urb ON r.review_id = urb.review_id
-        JOIN reader rd ON urb.reader_id = rd.reader_id
-        JOIN user u ON rd.reader_id = u.user_id
-        WHERE urb.isbn = ? AND u.user_id != ?
+            SELECT r.review_id, r.description, r.rating, r.posting_date, u.user_id, 
+                CONCAT(u.fname, ' ', u.lname) AS full_name,
+                (SELECT COUNT(*) FROM user_likes_review WHERE review_id = r.review_id) AS like_count
+            FROM review r
+            JOIN user_reviews_book urb ON r.review_id = urb.review_id
+            JOIN reader rd ON urb.reader_id = rd.reader_id
+            JOIN user u ON rd.reader_id = u.user_id
+            WHERE urb.isbn = ? AND u.user_id != ?
         ");
         $stmt_reviews->bind_param("ii", $book_isbn, $user_id);
         $stmt_reviews->execute();
         $result_reviews = $stmt_reviews->get_result();
 
         if ($result_reviews->num_rows > 0) {
-        while ($review = $result_reviews->fetch_assoc()) {
-            // Make the username a clickable link to the reader's profile page
-            $profile_link = "visit_reader.php?reader_id={$review['user_id']}";
-            
-            echo "<div style='border:1px solid #ccc; padding:10px; margin:10px 0;'>";
-            echo "<p><strong>Username:</strong> <a href='{$profile_link}'>{$review['full_name']}</a></p>";
-            echo "<p><strong>Rating:</strong> {$review['rating']}/5</p>";
-            echo "<p><strong>Review:</strong> " . (!empty($review['description']) ? $review['description'] : "No review provided.") . "</p>";
-            echo "<p><strong>Posted on:</strong> {$review['posting_date']}</p>";
-            echo "</div>";
-        }
+            while ($review = $result_reviews->fetch_assoc()) {
+                $profile_link = "visit_reader.php?reader_id={$review['user_id']}";
+                
+                // Check if the user has liked this review
+                $stmt_check_like = $conn->prepare("
+                    SELECT * FROM user_likes_review
+                    WHERE review_id = ? AND reader_id = ?
+                ");
+                $stmt_check_like->bind_param("ii", $review['review_id'], $user_id);
+                $stmt_check_like->execute();
+                $result_check_like = $stmt_check_like->get_result();
+                $has_liked = $result_check_like->num_rows > 0;
+
+                // Display review and like button
+                echo "<div style='border:1px solid #ccc; padding:10px; margin:10px 0;'>";
+                echo "<p><strong>Username:</strong> <a href='{$profile_link}'>{$review['full_name']}</a></p>";
+                echo "<p><strong>Rating:</strong> {$review['rating']}/5</p>";
+                echo "<p><strong>Review:</strong> " . (!empty($review['description']) ? $review['description'] : "No review provided.") . "</p>";
+                echo "<p><strong>Posted on:</strong> {$review['posting_date']}</p>";
+                echo "<p><strong>Likes:</strong> {$review['like_count']}</p>";
+                
+                // Display the like/unlike button
+                if ($has_liked) {
+                    echo "<form action='' method='POST'>
+                        <input type='hidden' name='unlike_review_id' value='{$review['review_id']}'>
+                        <input type='submit' name='unlike_review' value='Unlike'>
+                    </form>";
+                } else {
+                    echo "<form action='' method='POST'>
+                        <input type='hidden' name='like_review_id' value='{$review['review_id']}'>
+                        <input type='submit' name='like_review' value='Like'>
+                    </form>";
+                }
+                // Display comments and comment form
+                echo "<h3>Comments:</h3>";
+                
+               // Fetch and display comments for this review
+                $stmt_comments = $conn->prepare("
+                SELECT c.comment_id, c.comment, CONCAT(u.fname, ' ', u.lname) AS full_name, c.reader_id
+                FROM user_comments_review c
+                JOIN reader r ON c.reader_id = r.reader_id
+                JOIN user u ON r.reader_id = u.user_id
+                WHERE c.review_id = ?
+                ");
+                $stmt_comments->bind_param("i", $review['review_id']);
+                $stmt_comments->execute();
+                $result_comments = $stmt_comments->get_result();
+
+                if ($result_comments->num_rows > 0) {
+                while ($comment = $result_comments->fetch_assoc()) {
+                    echo "<div style='border:1px solid #ddd; padding:5px; margin:5px 0;'>";
+                    echo "<p><strong>{$comment['full_name']}:</strong> {$comment['comment']}</p>";
+                    
+                    // Show the edit button if the comment belongs to the logged-in user
+                    if ($comment['reader_id'] == $user_id) {
+                        echo "
+                        <form action='' method='POST' style='display:inline;'>
+                            <input type='hidden' name='edit_comment_id' value='{$comment['comment_id']}'>
+                            <input type='submit' name='edit_comment' value='Edit'>
+                        </form>";
+                    }
+                    
+                    echo "</div>";
+                }
+                } else {
+                echo "<p>No comments yet.</p>";
+                }
+
+            // Show edit comment form
+            if (isset($_POST['edit_comment'])) {
+                $comment_id = $_POST['edit_comment_id'];
+
+                // Fetch the existing comment
+                $stmt_get_comment = $conn->prepare("SELECT comment FROM user_comments_review WHERE comment_id = ? AND reader_id = ?");
+                $stmt_get_comment->bind_param("ii", $comment_id, $user_id);
+                $stmt_get_comment->execute();
+                $result_comment = $stmt_get_comment->get_result();
+
+                if ($result_comment->num_rows > 0) {
+                    $existing_comment = $result_comment->fetch_assoc();
+                    echo "
+                    <form action='' method='POST'>
+                        <textarea name='updated_comment' rows='3' cols='50' required>{$existing_comment['comment']}</textarea><br>
+                        <input type='hidden' name='comment_id' value='$comment_id'>
+                        <input type='submit' name='update_comment' value='Update Comment'>
+                    </form>";
+                } else {
+                    echo "<p>Comment not found or you do not have permission to edit this comment.</p>";
+                }
+
+                $stmt_get_comment->close();
+            }
+
+
+
+                // Comment form
+                echo "<form action='' method='POST'>
+                    <label for='comment'>Add a comment:</label><br>
+                    <textarea name='comment' id='comment' rows='3' cols='50' required></textarea><br>
+                    <input type='hidden' name='comment_review_id' value='{$review['review_id']}'>
+                    <input type='submit' name='submit_comment' value='Submit Comment'>
+                </form>";
+
+                echo "</div>";
+
+                $stmt_check_like->close();
+                $stmt_comments->close();
+            }
         } else {
-        echo "<p>No reviews found for this book.</p>";
+            echo "<p>No reviews found for this book.</p>";
         }
 
         $stmt_reviews->close();
@@ -232,6 +348,147 @@
                 }
             }
 
+            // Process like submission
+            if (isset($_POST['like_review'])) {
+                $review_id = $_POST['like_review_id'];
+
+                // Check if the user has already liked this review
+                $stmt_check_like = $conn->prepare("
+                    SELECT * FROM user_likes_review
+                    WHERE review_id = ? AND reader_id = ?
+                ");
+                $stmt_check_like->bind_param("ii", $review_id, $user_id);
+                $stmt_check_like->execute();
+                $result_check_like = $stmt_check_like->get_result();
+
+                if ($result_check_like->num_rows == 0) {
+                    // Insert a like into `user_likes_review` table
+                    $stmt_like = $conn->prepare("
+                        INSERT INTO user_likes_review (review_id, reader_id) VALUES (?, ?)
+                    ");
+                    $stmt_like->bind_param("ii", $review_id, $user_id);
+                    $stmt_like->execute();
+
+                    echo "<p>You liked this review!</p>";
+                    
+                    // Redirect to refresh the page after liking
+                    header("Location: ".$_SERVER['PHP_SELF']."?isbn=$book_isbn");
+                    exit();
+
+                    $stmt_like->close();
+                } else {
+                    echo "<p>You have already liked this review.</p>";
+                }
+
+                $stmt_check_like->close();
+            }
+
+            // Process unlike submission
+            if (isset($_POST['unlike_review'])) {
+                $review_id = $_POST['unlike_review_id'];
+
+                // Check if the user has liked this review
+                $stmt_check_like = $conn->prepare("
+                    SELECT * FROM user_likes_review
+                    WHERE review_id = ? AND reader_id = ?
+                ");
+                $stmt_check_like->bind_param("ii", $review_id, $user_id);
+                $stmt_check_like->execute();
+                $result_check_like = $stmt_check_like->get_result();
+
+                if ($result_check_like->num_rows > 0) {
+                    // Delete the like from `user_likes_review` table
+                    $stmt_unlike = $conn->prepare("
+                        DELETE FROM user_likes_review
+                        WHERE review_id = ? AND reader_id = ?
+                    ");
+                    $stmt_unlike->bind_param("ii", $review_id, $user_id);
+                    $stmt_unlike->execute();
+
+                    echo "<p>You unliked this review!</p>";
+
+                    // Redirect to refresh the page after unliking
+                    header("Location: ".$_SERVER['PHP_SELF']."?isbn=$book_isbn");
+                    exit();
+
+                    $stmt_unlike->close();
+                } else {
+                    echo "<p>You have not liked this review.</p>";
+                }
+
+                $stmt_check_like->close();
+            }
+
+            // Process comment submission
+            if (isset($_POST['submit_comment'])) {
+                $comment = $_POST['comment'];
+                $review_id = $_POST['comment_review_id'];
+
+                if (!empty($comment)) {
+                    // Insert into `user_comments_review` table
+                    $stmt_comment = $conn->prepare("
+                        INSERT INTO user_comments_review (review_id, reader_id, comment) 
+                        VALUES (?, ?, ?)
+                    ");
+                    $stmt_comment->bind_param("iis", $review_id, $user_id, $comment);
+                    $stmt_comment->execute();
+
+                    echo "<p>Your comment has been added!</p>";
+
+                    // Redirect to refresh the page after commenting
+                    header("Location: ".$_SERVER['PHP_SELF']."?isbn=$book_isbn");
+                    exit();
+
+                    $stmt_comment->close();
+                } else {
+                    echo "<p>Comment cannot be empty.</p>";
+                }
+            }
+
+            // Process comment deletion
+            if (isset($_POST['delete_comment'])) {
+                $comment_id = $_POST['delete_comment_id'];
+
+                // Delete the comment from `user_comments_review` table
+                $stmt_delete_comment = $conn->prepare("DELETE FROM user_comments_review WHERE comment_id = ? AND reader_id = ?");
+                $stmt_delete_comment->bind_param("ii", $comment_id, $user_id);
+                $stmt_delete_comment->execute();
+
+                if ($stmt_delete_comment->affected_rows > 0) {
+                    echo "<p>Your comment has been deleted.</p>";
+                } else {
+                    echo "<p>Failed to delete comment or you don't have permission.</p>";
+                }
+
+                $stmt_delete_comment->close();
+
+                // Redirect to refresh the page after deletion
+                header("Location: ".$_SERVER['PHP_SELF']."?isbn=$book_isbn");
+                exit();
+            }
+
+            // Process comment update
+            if (isset($_POST['update_comment'])) {
+                $updated_comment = $_POST['updated_comment'];
+                $comment_id = $_POST['comment_id'];
+
+                if (!empty($updated_comment)) {
+                    // Update the comment in the `user_comments_review` table
+                    $stmt_update_comment = $conn->prepare("UPDATE user_comments_review SET comment = ? WHERE comment_id = ? AND reader_id = ?");
+                    $stmt_update_comment->bind_param("sii", $updated_comment, $comment_id, $user_id);
+                    $stmt_update_comment->execute();
+
+                    echo "<p>Your comment has been updated!</p>";
+
+                    // Redirect to refresh the page after updating
+                    header("Location: " . $_SERVER['PHP_SELF'] . "?isbn=$book_isbn");
+                    exit();
+
+                    $stmt_update_comment->close();
+                } else {
+                    echo "<p>Comment cannot be empty.</p>";
+                }
+            }
 
 
             // Process review edit
