@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 15, 2024 at 09:17 PM
+-- Generation Time: Sep 16, 2024 at 10:16 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -228,7 +228,7 @@ CREATE TABLE `review` (
 
 INSERT INTO `review` (`review_id`, `rating`, `posting_date`, `description`) VALUES
 (15, 5, '2024-09-13', 'best book ever!!!!'),
-(21, 4, '2024-09-13', 'This book changed my life!!!!');
+(32, 4, '2024-09-16', 'this book changed my life');
 
 -- --------------------------------------------------------
 
@@ -271,6 +271,14 @@ CREATE TABLE `user_books_read_status` (
   `reading_status` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `user_books_read_status`
+--
+
+INSERT INTO `user_books_read_status` (`isbn`, `reader_id`, `reading_status`) VALUES
+('9781594771538', 14, 'read'),
+('9781594771538', 16, 'currently reading');
+
 -- --------------------------------------------------------
 
 --
@@ -289,9 +297,10 @@ CREATE TABLE `user_comments_review` (
 --
 
 INSERT INTO `user_comments_review` (`comment_id`, `review_id`, `reader_id`, `comment`) VALUES
-(4, 15, 14, 'You are correct!!!!'),
-(5, 15, 14, 'absolutely'),
-(6, 15, 14, 'hi');
+(4, 15, 14, 'You are correct'),
+(13, 15, 14, 'right'),
+(15, 32, 16, 'absolutely'),
+(17, 15, 16, 'thank you!!');
 
 -- --------------------------------------------------------
 
@@ -359,7 +368,7 @@ CREATE TABLE `user_reviews_book` (
 
 INSERT INTO `user_reviews_book` (`review_id`, `isbn`, `reader_id`) VALUES
 (15, '9781594771538', 16),
-(21, '9781594771538', 14);
+(32, '9781594771538', 14);
 
 -- --------------------------------------------------------
 
@@ -515,7 +524,7 @@ ALTER TABLE `user_social_media_url`
 -- AUTO_INCREMENT for table `review`
 --
 ALTER TABLE `review`
-  MODIFY `review_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `review_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `user`
@@ -527,7 +536,7 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT for table `user_comments_review`
 --
 ALTER TABLE `user_comments_review`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- Constraints for dumped tables

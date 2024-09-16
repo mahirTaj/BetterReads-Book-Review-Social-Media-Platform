@@ -1,4 +1,5 @@
 <?php
+    ob_start();
     include("database.php");
     session_start();
 
@@ -22,6 +23,29 @@
         $stmt->execute();
         $result = $stmt->get_result();
 
+
+        // Fetch genres for the current book
+        $stmt_genres = $conn->prepare("
+            SELECT g.genre_name
+            FROM book_belongs_to_genre bb
+            JOIN genre g ON bb.genre_name = g.genre_name
+            WHERE bb.isbn = ?
+        ");
+        $stmt_genres->bind_param("i", $book_isbn);
+        $stmt_genres->execute();
+        $result_genres = $stmt_genres->get_result();
+
+
+        // Fetch the current status of the book for the logged-in user
+        $stmt_status = $conn->prepare("SELECT reading_status FROM user_books_read_status WHERE reader_id = ? AND isbn = ?");
+        $stmt_status->bind_param("is", $user_id, $book_isbn);
+        $stmt_status->execute();
+        $result_status = $stmt_status->get_result();
+        $current_status = $result_status->fetch_assoc()['reading_status'] ?? '';
+        $stmt_status->close();
+
+
+        // Display book details
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
 
@@ -56,6 +80,36 @@
                 echo "<p>Language: {$row['language']}</p>";
             }
 
+        // Display genres
+        if ($result_genres->num_rows > 0) {
+            echo "<p>Genres: ";
+            while ($genre = $result_genres->fetch_assoc()) {
+                $genre_name = htmlspecialchars($genre['genre_name']); // Ensure special characters are properly escaped
+                echo "<a href='genre.php?genre_name=" . urlencode($genre_name) . "'>{$genre_name}</a> ";
+            }
+            echo "</p>";
+        } else {
+            echo "<p>No genres found for this book.</p>";
+        }
+
+        $stmt_genres->close();
+
+
+        echo "<p>Current Reading Status: " . ($current_status ? $current_status : "Not set") . "</p>";
+        // Display the form to update reading status
+        ?>
+        <form action="" method="POST">
+            <label for="reading_status">Select Reading Status:</label>
+            <select name="reading_status" id="reading_status">
+                <option value="">--Select--</option>
+                <option value="currently reading" <?php if ($current_status == 'currently reading') echo 'selected'; ?>>Currently Reading</option>
+                <option value="read" <?php if ($current_status == 'read') echo 'selected'; ?>>Read</option>
+                <option value="want to read" <?php if ($current_status == 'want to read') echo 'selected'; ?>>Want to Read</option>
+            </select>
+            <input type="hidden" name="book_isbn" value="<?php echo $book_isbn; ?>">
+            <input type="submit" name="update_reading_status" value="Update Status">
+        </form>
+        <?php
 
             // Calculate and display average rating
             $stmt_avg_rating = $conn->prepare("
@@ -131,58 +185,134 @@
 
 
 
-        // Fetch and display reviews
-        echo "<h2>Reviews for this book:</h2>";
+            // Fetch and display reviews
+            echo "<h2>Reviews for this book:</h2>";
 
-        // First, fetch the user's review, if available
-        $stmt_user_review = $conn->prepare("
-            SELECT r.review_id, r.description, r.rating, r.posting_date, u.user_id, 
-                CONCAT(u.fname, ' ', u.lname) AS full_name
-            FROM review r
-            JOIN user_reviews_book urb ON r.review_id = urb.review_id
-            JOIN reader rd ON urb.reader_id = rd.reader_id
-            JOIN user u ON rd.reader_id = u.user_id
-            WHERE urb.isbn = ? AND u.user_id = ?
-        ");
-        $stmt_user_review->bind_param("ii", $book_isbn, $user_id);
-        $stmt_user_review->execute();
-        $result_user_review = $stmt_user_review->get_result();
+            // First, fetch the user's review, if available
+            $stmt_user_review = $conn->prepare("
+                SELECT r.review_id, r.description, r.rating, r.posting_date, u.user_id, 
+                    CONCAT(u.fname, ' ', u.lname) AS full_name
+                FROM review r
+                JOIN user_reviews_book urb ON r.review_id = urb.review_id
+                JOIN reader rd ON urb.reader_id = rd.reader_id
+                JOIN user u ON rd.reader_id = u.user_id
+                WHERE urb.isbn = ? AND u.user_id = ?
+            ");
+            $stmt_user_review->bind_param("ii", $book_isbn, $user_id);
+            $stmt_user_review->execute();
+            $result_user_review = $stmt_user_review->get_result();
 
-        // Display the user's review at the top
-        if ($result_user_review->num_rows > 0) {
-            $review = $result_user_review->fetch_assoc();
+            // Display the user's review at the top
+            if ($result_user_review->num_rows > 0) {
+                $review = $result_user_review->fetch_assoc();
 
-            echo "<div style='border:1px solid #ccc; padding:10px; margin:10px 0; background-color: #f9f9f9;'>";
-            echo "<p><strong>Your Review</strong></p>";
-            echo "<p><strong>Username:</strong> {$review['full_name']}</p>";
-            echo "<p><strong>Rating:</strong> {$review['rating']}/5</p>";
-            echo "<p><strong>Review:</strong> " . (!empty($review['description']) ? $review['description'] : "No review provided.") . "</p>";
-            echo "<p><strong>Posted on:</strong> {$review['posting_date']}</p>";
+                echo "<div style='border:1px solid #ccc; padding:10px; margin:10px 0; background-color: #f9f9f9;'>";
+                echo "<p><strong>Your Review</strong></p>";
+                echo "<p><strong>Username:</strong> {$review['full_name']}</p>";
+                echo "<p><strong>Rating:</strong> {$review['rating']}/5</p>";
+                echo "<p><strong>Review:</strong> " . (!empty($review['description']) ? $review['description'] : "No review provided.") . "</p>";
+                echo "<p><strong>Posted on:</strong> {$review['posting_date']}</p>";
 
-            // Show the edit and delete options for the user's review
-            echo "<form action='' method='POST'>
-                <label for='rating_edit'>Edit Rating:</label>
-                <select name='rating_edit' id='rating_edit' required>
-                    <option value='1' " . ($review['rating'] == 1 ? "selected" : "") . ">1</option>
-                    <option value='2' " . ($review['rating'] == 2 ? "selected" : "") . ">2</option>
-                    <option value='3' " . ($review['rating'] == 3 ? "selected" : "") . ">3</option>
-                    <option value='4' " . ($review['rating'] == 4 ? "selected" : "") . ">4</option>
-                    <option value='5' " . ($review['rating'] == 5 ? "selected" : "") . ">5</option>
-                </select><br>
+                // Show the edit and delete options for the user's review
+                echo "<form action='' method='POST'>
+                    <label for='rating_edit'>Edit Rating:</label>
+                    <select name='rating_edit' id='rating_edit' required>
+                        <option value='1' " . ($review['rating'] == 1 ? "selected" : "") . ">1</option>
+                        <option value='2' " . ($review['rating'] == 2 ? "selected" : "") . ">2</option>
+                        <option value='3' " . ($review['rating'] == 3 ? "selected" : "") . ">3</option>
+                        <option value='4' " . ($review['rating'] == 4 ? "selected" : "") . ">4</option>
+                        <option value='5' " . ($review['rating'] == 5 ? "selected" : "") . ">5</option>
+                    </select><br>
 
-                <label for='review_edit'>Edit Review (optional):</label><br>
-                <textarea name='review_edit' id='review_edit' rows='5' cols='50'>{$review['description']}</textarea><br><br>
+                    <label for='review_edit'>Edit Review (optional):</label><br>
+                    <textarea name='review_edit' id='review_edit' rows='5' cols='50'>{$review['description']}</textarea><br><br>
 
-                <input type='hidden' name='review_id' value='{$review['review_id']}'>
-                <input type='submit' name='edit_review' value='Update Review'>
-                <input type='submit' name='delete_review' value='Delete Review' onclick=\"return confirm('Are you sure you want to delete this review?');\">
-            </form>";
-            echo "</div>";
-        } else {
-            echo "<p>You have not reviewed this book yet.</p>";
-        }
+                    <input type='hidden' name='review_id' value='{$review['review_id']}'>
+                    <input type='submit' name='edit_review' value='Update Review'>
+                    <input type='submit' name='delete_review' value='Delete Review' onclick=\"return confirm('Are you sure you want to delete this review?');\">
+                </form>";
 
-        $stmt_user_review->close();
+                // **Updated Code to Fetch, Display, and Edit/Delete Comments for This Review**
+                // Fetch comments for the user's review
+                $stmt_comments = $conn->prepare("
+                    SELECT c.comment_id, c.comment, CONCAT(u.fname, ' ', u.lname) AS full_name, c.reader_id
+                    FROM user_comments_review c
+                    JOIN reader r ON c.reader_id = r.reader_id
+                    JOIN user u ON r.reader_id = u.user_id
+                    WHERE c.review_id = ?
+                ");
+                $stmt_comments->bind_param("i", $review['review_id']);
+                $stmt_comments->execute();
+                $result_comments = $stmt_comments->get_result();
+
+                // Display comments
+                if ($result_comments->num_rows > 0) {
+                    echo "<h3>Comments:</h3>";
+                    while ($comment = $result_comments->fetch_assoc()) {
+                        echo "<div style='border:1px solid #ddd; padding:5px; margin:5px 0;'>";
+                        echo "<p><strong>{$comment['full_name']}:</strong> {$comment['comment']}</p>";
+
+                        // Show the edit and delete buttons if the comment belongs to the logged-in user
+                        if ($comment['reader_id'] == $user_id) {
+                            echo "
+                            <form action='' method='POST' style='display:inline;'>
+                                <input type='hidden' name='edit_comment_id' value='{$comment['comment_id']}'>
+                                <input type='submit' name='edit_comment' value='Edit'>
+                            </form>
+                            <form action='' method='POST' style='display:inline;'>
+                                <input type='hidden' name='delete_comment_id' value='{$comment['comment_id']}'>
+                                <input type='submit' name='delete_comment' value='Delete' onclick=\"return confirm('Are you sure you want to delete this comment?');\">
+                            </form>";
+                        }
+
+                        echo "</div>";
+                    }
+                } else {
+                    echo "<p>No comments yet.</p>";
+                }
+
+                // Show the form to add a new comment
+                echo "<form action='' method='POST'>
+                    <label for='comment'>Add a comment:</label><br>
+                    <textarea name='comment' id='comment' rows='3' cols='50' required></textarea><br>
+                    <input type='hidden' name='comment_review_id' value='{$review['review_id']}'>
+                    <input type='submit' name='submit_comment' value='Submit Comment'>
+                </form>";
+
+                // Show edit comment form
+                if (isset($_POST['edit_comment'])) {
+                    $comment_id = $_POST['edit_comment_id'];
+
+                    // Fetch the existing comment
+                    $stmt_get_comment = $conn->prepare("SELECT comment FROM user_comments_review WHERE comment_id = ? AND reader_id = ?");
+                    $stmt_get_comment->bind_param("ii", $comment_id, $user_id);
+                    $stmt_get_comment->execute();
+                    $result_comment = $stmt_get_comment->get_result();
+
+                    if ($result_comment->num_rows > 0) {
+                        $existing_comment = $result_comment->fetch_assoc();
+                        echo "
+                        <form action='' method='POST'>
+                            <textarea name='updated_comment' rows='3' cols='50' required>{$existing_comment['comment']}</textarea><br>
+                            <input type='hidden' name='comment_id' value='$comment_id'>
+                            <input type='submit' name='update_comment' value='Update Comment'>
+                        </form>";
+                    } else {
+                        echo "<p>Comment not found or you do not have permission to edit this comment.</p>";
+                    }
+
+                    $stmt_get_comment->close();
+                }
+
+                echo "</div>";
+                $stmt_comments->close();
+            } else {
+                echo "<p>You have not reviewed this book yet.</p>";
+            }
+
+            $stmt_user_review->close();
+
+
 
         // Fetch and display all other reviews excluding the user's review
         $stmt_reviews = $conn->prepare("
@@ -235,8 +365,8 @@
                 }
                 // Display comments and comment form
                 echo "<h3>Comments:</h3>";
-                
-               // Fetch and display comments for this review
+
+                // Fetch and display comments for this review
                 $stmt_comments = $conn->prepare("
                 SELECT c.comment_id, c.comment, CONCAT(u.fname, ' ', u.lname) AS full_name, c.reader_id
                 FROM user_comments_review c
@@ -249,51 +379,53 @@
                 $result_comments = $stmt_comments->get_result();
 
                 if ($result_comments->num_rows > 0) {
-                while ($comment = $result_comments->fetch_assoc()) {
-                    echo "<div style='border:1px solid #ddd; padding:5px; margin:5px 0;'>";
-                    echo "<p><strong>{$comment['full_name']}:</strong> {$comment['comment']}</p>";
-                    
-                    // Show the edit button if the comment belongs to the logged-in user
-                    if ($comment['reader_id'] == $user_id) {
-                        echo "
-                        <form action='' method='POST' style='display:inline;'>
-                            <input type='hidden' name='edit_comment_id' value='{$comment['comment_id']}'>
-                            <input type='submit' name='edit_comment' value='Edit'>
-                        </form>";
+                    while ($comment = $result_comments->fetch_assoc()) {
+                        echo "<div style='border:1px solid #ddd; padding:5px; margin:5px 0;'>";
+                        echo "<p><strong>{$comment['full_name']}:</strong> {$comment['comment']}</p>";
+                        
+                        // Show the edit and delete buttons if the comment belongs to the logged-in user
+                        if ($comment['reader_id'] == $user_id) {
+                            echo "
+                            <form action='' method='POST' style='display:inline;'>
+                                <input type='hidden' name='edit_comment_id' value='{$comment['comment_id']}'>
+                                <input type='submit' name='edit_comment' value='Edit'>
+                            </form>
+                            <form action='' method='POST' style='display:inline;'>
+                                <input type='hidden' name='delete_comment_id' value='{$comment['comment_id']}'>
+                                <input type='submit' name='delete_comment' value='Delete' onclick=\"return confirm('Are you sure you want to delete this comment?');\">
+                            </form>";
+                        }
+                        
+                        echo "</div>";
                     }
-                    
-                    echo "</div>";
-                }
                 } else {
-                echo "<p>No comments yet.</p>";
+                    echo "<p>No comments yet.</p>";
                 }
 
-            // Show edit comment form
-            if (isset($_POST['edit_comment'])) {
-                $comment_id = $_POST['edit_comment_id'];
+                // Show edit comment form
+                if (isset($_POST['edit_comment'])) {
+                    $comment_id = $_POST['edit_comment_id'];
 
-                // Fetch the existing comment
-                $stmt_get_comment = $conn->prepare("SELECT comment FROM user_comments_review WHERE comment_id = ? AND reader_id = ?");
-                $stmt_get_comment->bind_param("ii", $comment_id, $user_id);
-                $stmt_get_comment->execute();
-                $result_comment = $stmt_get_comment->get_result();
+                    // Fetch the existing comment
+                    $stmt_get_comment = $conn->prepare("SELECT comment FROM user_comments_review WHERE comment_id = ? AND reader_id = ?");
+                    $stmt_get_comment->bind_param("ii", $comment_id, $user_id);
+                    $stmt_get_comment->execute();
+                    $result_comment = $stmt_get_comment->get_result();
 
-                if ($result_comment->num_rows > 0) {
-                    $existing_comment = $result_comment->fetch_assoc();
-                    echo "
-                    <form action='' method='POST'>
-                        <textarea name='updated_comment' rows='3' cols='50' required>{$existing_comment['comment']}</textarea><br>
-                        <input type='hidden' name='comment_id' value='$comment_id'>
-                        <input type='submit' name='update_comment' value='Update Comment'>
-                    </form>";
-                } else {
-                    echo "<p>Comment not found or you do not have permission to edit this comment.</p>";
+                    if ($result_comment->num_rows > 0) {
+                        $existing_comment = $result_comment->fetch_assoc();
+                        echo "
+                        <form action='' method='POST'>
+                            <textarea name='updated_comment' rows='3' cols='50' required>{$existing_comment['comment']}</textarea><br>
+                            <input type='hidden' name='comment_id' value='$comment_id'>
+                            <input type='submit' name='update_comment' value='Update Comment'>
+                        </form>";
+                    } else {
+                        echo "<p>Comment not found or you do not have permission to edit this comment.</p>";
+                    }
+
+                    $stmt_get_comment->close();
                 }
-
-                $stmt_get_comment->close();
-            }
-
-
 
                 // Comment form
                 echo "<form action='' method='POST'>
@@ -307,6 +439,7 @@
 
                 $stmt_check_like->close();
                 $stmt_comments->close();
+
             }
         } else {
             echo "<p>No reviews found for this book.</p>";
@@ -467,49 +600,57 @@
                 exit();
             }
 
-            // Process comment update
-            if (isset($_POST['update_comment'])) {
-                $updated_comment = $_POST['updated_comment'];
-                $comment_id = $_POST['comment_id'];
+        // Process comment update
+        if (isset($_POST['update_comment'])) {
+            $updated_comment = $_POST['updated_comment'];
+            $comment_id = $_POST['comment_id'];
 
-                if (!empty($updated_comment)) {
-                    // Update the comment in the `user_comments_review` table
-                    $stmt_update_comment = $conn->prepare("UPDATE user_comments_review SET comment = ? WHERE comment_id = ? AND reader_id = ?");
-                    $stmt_update_comment->bind_param("sii", $updated_comment, $comment_id, $user_id);
-                    $stmt_update_comment->execute();
+            if (!empty($updated_comment)) {
+                // Update the comment in the `user_comments_review` table
+                $stmt_update_comment = $conn->prepare("UPDATE user_comments_review SET comment = ? WHERE comment_id = ? AND reader_id = ?");
+                if ($stmt_update_comment === false) {
+                    die('Prepare failed: ' . $conn->error);
+                }
 
+                $stmt_update_comment->bind_param("sii", $updated_comment, $comment_id, $user_id);
+                if (!$stmt_update_comment->execute()) {
+                    echo "<p>Error updating comment: " . $stmt_update_comment->error . "</p>";
+                } else {
                     echo "<p>Your comment has been updated!</p>";
 
                     // Redirect to refresh the page after updating
                     header("Location: " . $_SERVER['PHP_SELF'] . "?isbn=$book_isbn");
                     exit();
-
-                    $stmt_update_comment->close();
-                } else {
-                    echo "<p>Comment cannot be empty.</p>";
                 }
+
+                $stmt_update_comment->close();
+            } else {
+                echo "<p>Please enter a comment to update.</p>";
             }
+        }
 
+        // Process review edit
+        if (isset($_POST['edit_review'])) {
+            $rating_edit = $_POST['rating_edit'];
+            $review_edit = !empty($_POST['review_edit']) ? $_POST['review_edit'] : null;
+            $review_id = $_POST['review_id'];
 
-            // Process review edit
-            if (isset($_POST['edit_review'])) {
-                $rating_edit = $_POST['rating_edit'];
-                $review_edit = !empty($_POST['review_edit']) ? $_POST['review_edit'] : null;
-                $review_id = $_POST['review_id'];
+            if ($rating_edit) {
+                // Update the existing review
+                $stmt_edit = $conn->prepare("UPDATE review SET description = ?, rating = ? WHERE review_id = ?");
+                $stmt_edit->bind_param("sii", $review_edit, $rating_edit, $review_id);
+                $stmt_edit->execute();
 
-                if ($rating_edit) {
-                    // Update the existing review
-                    $stmt_edit = $conn->prepare("UPDATE review SET description = ?, rating = ? WHERE review_id = ?");
-                    $stmt_edit->bind_param("sii", $review_edit, $rating_edit, $review_id);
-                    $stmt_edit->execute();
+                $stmt_edit->close();
 
-                    echo "<p>Your review has been updated!</p>";
-
-                    $stmt_edit->close();
-                } else {
-                    echo "<p>Please select a rating.</p>";
-                }
+                // Redirect to the same page to reflect the changes
+                header("Location: " . $_SERVER['PHP_SELF'] . "?isbn=$book_isbn");
+                exit(); // Make sure to call exit() after header() to stop the script
+            } else {
+                echo "<p>Please select a rating.</p>";
             }
+        }
+
             // Process review deletion
             if (isset($_POST['delete_review'])) {
                 $review_id = $_POST['review_id'];
@@ -533,6 +674,39 @@
                 header("Location: ".$_SERVER['PHP_SELF']."?isbn=$book_isbn");
                 exit();
             }
+
+            // Process user read status
+            if (isset($_POST['update_reading_status'])) {
+                $reading_status = $_POST['reading_status'];
+                $book_isbn = $_POST['book_isbn'];
+            
+                // Check if a status already exists for this user and book
+                $stmt_check = $conn->prepare("SELECT * FROM user_books_read_status WHERE reader_id = ? AND isbn = ?");
+                $stmt_check->bind_param("is", $user_id, $book_isbn);
+                $stmt_check->execute();
+                $result_check = $stmt_check->get_result();
+            
+                if ($result_check->num_rows > 0) {
+                    // Update the existing status
+                    $stmt_update = $conn->prepare("UPDATE user_books_read_status SET reading_status = ? WHERE reader_id = ? AND isbn = ?");
+                    $stmt_update->bind_param("sis", $reading_status, $user_id, $book_isbn);
+                    $stmt_update->execute();
+                    $stmt_update->close();
+                } else {
+                    // Insert a new status
+                    $stmt_insert = $conn->prepare("INSERT INTO user_books_read_status (reader_id, isbn, reading_status) VALUES (?, ?, ?)");
+                    $stmt_insert->bind_param("iss", $user_id, $book_isbn, $reading_status);
+                    $stmt_insert->execute();
+                    $stmt_insert->close();
+                }
+            
+                $stmt_check->close();
+            
+                // Redirect to the same page to avoid form resubmission
+                header("Location: " . $_SERVER['PHP_SELF'] . "?isbn=$book_isbn");
+                exit();
+            }
+            
 
         } else {
             echo "Book not found.";
