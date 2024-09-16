@@ -125,7 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $format = NULL;
     }
     if (!empty($_POST["description"])) {
-        $description = $_POST["description"];
+        $description = htmlspecialchars($_POST["description"]);
     }
     else{
         $description = NULL;

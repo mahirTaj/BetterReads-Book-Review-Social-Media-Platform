@@ -10,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>edit author profile</title>
 </head>
 <body>
     <a href="author_profile.php">Go back to your Profile</a>
@@ -65,6 +65,15 @@
             <label for="email">Email:</label>
             <input type="email" name="email" id="email">
         </div>
+        <div>
+            <label for="biography">Biography:</label>
+            <textarea name="biography" id="biography" placeholder="Write a short biography" rows="4"></textarea>
+        </div>
+        <div>
+            <label for="website">Personal Website:</label>
+            <input type="url" name="website" id="website" placeholder="Enter your website URL">
+        </div>
+
         <div>
             <label for="password">Current Password:</label>
             <input type="password" name="password" id="password">
@@ -267,7 +276,36 @@
                 echo "Invalid email format<br>";
             }
         }
+        if (!empty($_POST["biography"])) {
+            $biography = filter_input(INPUT_POST, "biography", FILTER_SANITIZE_SPECIAL_CHARS);
+            $stmt = $conn->prepare("UPDATE author SET biography = ? WHERE author_id = ?");
+            $stmt->bind_param("si", $biography, $_SESSION['user_id']);
+            
+            if ($stmt->execute()) {
+                echo "Biography updated successfully.<br>";
+            } else {
+                echo "Error updating biography: " . $stmt->error . "<br>";
+            }
+            $stmt->close();
+        }
 
+        //Personal Website
+        if (!empty($_POST["website"])) {
+            $website = filter_input(INPUT_POST, "website", FILTER_VALIDATE_URL);
+            if ($website !== false) {
+                $stmt = $conn->prepare("UPDATE author SET personal_website = ? WHERE author_id = ?");
+                $stmt->bind_param("si", $website, $_SESSION['user_id']);
+                
+                if ($stmt->execute()) {
+                    echo "Personal website updated successfully.<br>";
+                } else {
+                    echo "Error updating personal website: " . $stmt->error . "<br>";
+                }
+                $stmt->close();
+            } else {
+                echo "Invalid website URL.<br>";
+            }
+        }
         if (!empty($_POST["password"]) && isset($_POST["new_password"]) && isset($_POST["confirm_password"])){
             $password=filter_input(INPUT_POST, "password", FILTER_SANITIZE_SPECIAL_CHARS);
             $new_password=filter_input(INPUT_POST, "new_password", FILTER_SANITIZE_SPECIAL_CHARS);
@@ -305,12 +343,7 @@
     }
         
     ?>
-<?php
-    include("footer.html");
-    if (isset($_POST['submit'])){
-        echo "Author profile modified successfully";
-        header('Location: Author_profile.php');
-    }
-    mysqli_close($conn); // Close connection at the end of the script
-?>
-
+    <?php
+        include("footer.html");
+        mysqli_close($conn); //last of all code
+    ?>

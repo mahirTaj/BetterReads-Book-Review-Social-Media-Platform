@@ -62,6 +62,27 @@
         </select>
         </div>
         <div>
+            <label for="about_me">About Me:</label>
+            <textarea name="about_me" id="about_me" rows="4" cols="50"></textarea>
+        </div>
+        <h3>Social Platform Link</h3>
+        <div>
+            <label for="platform">Choose Platform:</label>
+            <select name="platform" id="platform">
+                <option value="">Select a platform</option>
+                <option value="facebook">Facebook</option>
+                <option value="twitter">Twitter</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="instagram">Instagram</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div>
+            <label for="platform_link">Platform Link:</label>
+            <input type="url" name="platform_link" id="platform_link">
+        </div>
+
+        <div>
             <label for="email">Email:</label>
             <input type="email" name="email" id="email">
         </div>
@@ -257,6 +278,41 @@
                 echo "Error updating gender: " . $stmt->error . "<br>";
             }
             $stmt->close();
+        }
+        if (!empty($_POST["about_me"])) {
+            $about_me = filter_input(INPUT_POST, "about_me", FILTER_SANITIZE_SPECIAL_CHARS);
+            
+            // Prepare the SQL statement
+            $stmt = $conn->prepare("UPDATE reader SET about_me = ? WHERE reader_id = ?");
+            
+            // Bind parameters
+            $stmt->bind_param("si", $about_me, $_SESSION['user_id']);
+            
+            // Execute the statement
+            if ($stmt->execute()) {
+                echo "About Me updated successfully<br>";
+            } else {
+                echo "Error updating About Me: " . $stmt->error . "<br>";
+            }
+        }
+        if (!empty($_POST["platform"]) && !empty($_POST["platform_link"])) {
+            $platform = filter_input(INPUT_POST, "platform", FILTER_SANITIZE_SPECIAL_CHARS);
+            $link = filter_input(INPUT_POST, "platform_link", FILTER_SANITIZE_URL);
+            
+            if (filter_var($link, FILTER_VALIDATE_URL)) {
+                $stmt = $conn->prepare("UPDATE reader SET social_platform = ?, social_link = ? WHERE reader_id = ?");
+                $stmt->bind_param("ssi", $platform, $link, $_SESSION['user_id']);
+                
+                if ($stmt->execute()) {
+                    echo "Social platform link updated successfully<br>";
+                } else {
+                    echo "Error updating social platform link: " . $stmt->error . "<br>";
+                }
+                
+                $stmt->close();
+            } else {
+                echo "Invalid URL for the social platform link<br>";
+            }
         }
         
         // Update email
