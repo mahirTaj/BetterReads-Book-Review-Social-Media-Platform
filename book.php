@@ -44,7 +44,17 @@
         $current_status = $result_status->fetch_assoc()['reading_status'] ?? '';
         $stmt_status->close();
 
+        // Query to get author_id and full name from author_writes_book and user tables
+        $author_query = "
+            SELECT awb.author_id, u.fname, u.mname, u.lname
+            FROM author_writes_book awb
+            JOIN author a ON awb.author_id = a.author_id
+            JOIN user u ON a.author_id = u.user_id
+            WHERE awb.isbn = '$book_isbn'";
 
+        $author_result = $conn->query($author_query);
+
+        
         // Display book details
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
@@ -52,11 +62,24 @@
             // Display book details
             echo "<h1>{$row['title']}</h1>";
             if (!empty($row['cover'])) {
-                echo "<img src='{$row["cover"]}' alt=''>";
+                echo "<img height=400 src='{$row["cover"]}' alt=''>";
             } else {
-                echo "<img src='default_cover.jpg' alt=''>";
+                echo "<img height=400 src='default_cover.jpg' alt=''>";
             }
-            echo "<p>Author: {$row['author_name']}</p>";
+            
+            // Display authors
+            if ($author_result->num_rows > 0) {
+                echo "<p>Author: ";
+                while ($author_row = $author_result->fetch_assoc()) {
+                    // Construct full name
+                    $full_name = htmlspecialchars(trim($author_row['fname'] . ' ' . $author_row['mname'] . ' ' . $author_row['lname']));
+                    $author_id = $author_row['author_id'];
+                    echo "<a href='visit_author.php?author_id={$author_id}'>{$full_name}</a> ";
+                }
+                echo "</p>";
+            } else {
+                echo "<p>No authors found for this book.</p>";
+            }
             if (!empty($row['publish_date'])) {
                 echo "<p>Published on: {$row['publish_date']}</p>";
             }

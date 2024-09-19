@@ -17,6 +17,8 @@
     </form>
 
     <a href="edit_author_profile.php">Edit Profile</a>
+    <a href="search.php">Search</a>
+    <a href="genre_browse.php">Browse Genre</a>
 </body>
 </html>
 
@@ -47,6 +49,10 @@
         }
         if (!empty($row["lname"])) {
             echo $row["lname"]."<br>";
+        }
+        if (!empty($row["user_id"])) {
+            echo "Author_id: ";
+            echo $row["user_id"]."<br>";
         }
         if (!empty($row["date_of_birth"])) {
             echo "Date of birth: ";
@@ -118,6 +124,40 @@
 </body>
 </html>
 <?php
+   $author_id = $_SESSION['user_id'];
+
+   // Construct the SQL query using all columns including the new ones
+   $sql = "SELECT b.isbn, b.title, b.author_name, b.publish_date, b.pages, b.description, b.format, 
+                  b.purchase_link, b.publisher, b.language, b.cover
+           FROM book b
+           INNER JOIN author_writes_book awb ON b.isbn = awb.isbn
+           WHERE awb.author_id = '$author_id'";
+   
+   $result = mysqli_query($conn, $sql);
+   
+   if ($result && mysqli_num_rows($result) > 0) {
+       echo "<h2>Books by This Author</h2>";
+       echo "<div style='display: flex; flex-wrap: wrap; gap: 20px;'>";
+       
+       while ($book = mysqli_fetch_assoc($result)) {
+           $isbn = $book['isbn'];
+           $book_title = htmlspecialchars($book['title']);
+           $publish_date = $book['publish_date'];
+           $cover_image = !empty($book['cover']) ? $book['cover'] : 'path/to/default/book/cover.jpg';
+           
+           echo "<div style='width: 200px; text-align: center;'>";
+           echo "<a href='book.php?isbn=$isbn' style='text-decoration: none; color: inherit;'>";
+           echo "<img src='" . htmlspecialchars($cover_image) . "' alt='$book_title' style='width: 150px; height: 200px; object-fit: cover;'><br>";
+           echo "<strong>$book_title</strong><br>";
+           echo "Published: $publish_date<br>";
+           echo "</a>";
+           echo "</div>";
+       }
+       
+       echo "</div>";
+   } else {
+       echo "<p>No books found for this author.</p>";
+   }
     include("footer.html");
     mysqli_close($conn);
 ?>

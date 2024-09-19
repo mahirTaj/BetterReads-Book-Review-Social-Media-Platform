@@ -13,8 +13,8 @@
 <body>
     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post" enctype="multipart/form-data">
         <div>
-            <label for="isbn">ISBN:</label>
-            <input type="text" name="isbn" id="isbn" required>
+            <label for="isbn">ISBN (13 digit):</label>
+            <input type="number" name="isbn" id="isbn" required>
         </div>
         <div>
             <label for="title">Title:</label>
@@ -70,6 +70,10 @@
             <input type="checkbox" name="genres[]" value="self-help"> Self-help
             <input type="checkbox" name="genres[]" value="science-fiction"> Science Fiction
             <input type="checkbox" name="genres[]" value="horror"> Horror
+            <input type="checkbox" name="genres[]" value="biography"> Biography
+            <input type="checkbox" name="genres[]" value="children"> Children
+            <input type="checkbox" name="genres[]" value="classic"> Classic
+            <input type="checkbox" name="genres[]" value="business"> Business
             </div>
         </div>
         <div>
@@ -85,135 +89,90 @@
 
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (empty($_POST["isbn"]) || empty($_POST["title"]) || empty($_POST["author"])) {
-        echo "ISBN, Title, and Author are mandatory fields.";
+    if (empty($_POST["isbn"]) || empty($_POST["title"]) || empty($_POST["author"]) || strlen($_POST["isbn"]) !== 13) {
+        echo "ISBN, Title, and Author are mandatory fields, and ISBN must be exactly 13 characters long.";
+        return; // Stop further execution if validation fails
     } else {
-        // Prepare data for insertion
+        // Mandatory fields
         $title = $_POST["title"];
         $isbn = $_POST["isbn"];
         $author = $_POST["author"];
-    }
-     // Check optional fields and add them to the data array if filled
-    if (!empty($_POST["date"])) {
-        $date = $_POST["date"];
-    }
-    else{
-        $date = NULL;
-    }
-    if (!empty($_POST["publisher"])) {
-        $publisher = $_POST["publisher"];
-    }
-    else{
-        $publisher = NULL;
-    }
-    if (!empty($_POST["language"])) {
-        $language = $_POST["language"];
-    }
-    else{
-        $language = NULL;
-    }
-    if (!empty($_POST["pages"])) {
-        $pages = $_POST["pages"];
-    }
-    else{
-        $pages = NULL;
-    }
-    if (!empty($_POST["format"])) {
-        $format = $_POST["format"];
-    }
-    else{
-        $format = NULL;
-    }
-    if (!empty($_POST["description"])) {
-        $description = htmlspecialchars($_POST["description"]);
-    }
-    else{
-        $description = NULL;
-    }
-    if (!empty($_POST["purchase_link"])) {
-        $purchase_link = $_POST["purchase_link"];
-    }
-    else{
-        $purchase_link = NULL;
-    }
-    if (!empty($_FILES["cover"])) {
-        $cover = $_FILES["cover"];
-    }
-    else{
-        $cover = NULL;
-    }
-    $fileDestination = NULL;
-    if (isset($_FILES["file"])){
-        // photo
-        $file = $_FILES["file"]; //dictionary
 
-        $fileName= $_FILES["file"]['name'];
-        $fileTmpName= $_FILES["file"]['tmp_name']; // tempporary location of the pic
-        $fileSize= $_FILES["file"]['size'];
-        $fileError= $_FILES["file"]['error']; //0 means no error
-        $fileType= $_FILES["file"]['type']; // we will not use this
+        // Optional fields
+        $date = !empty($_POST["date"]) ? $_POST["date"] : NULL;
+        $publisher = !empty($_POST["publisher"]) ? $_POST["publisher"] : NULL;
+        $language = !empty($_POST["language"]) ? $_POST["language"] : NULL;
+        $pages = !empty($_POST["pages"]) ? $_POST["pages"] : NULL;
+        $format = !empty($_POST["format"]) ? $_POST["format"] : NULL;
+        $description = !empty($_POST["description"]) ? htmlspecialchars($_POST["description"]) : NULL;
+        $purchase_link = !empty($_POST["purchase_link"]) ? $_POST["purchase_link"] : NULL;
+        $fileDestination = 'book_cover/open-book.jpg'; // Default cover photo
 
+        // File upload processing
+        if (isset($_FILES["file"]) && $_FILES["file"]["error"] !== 4) { // Check if file is uploaded
+            $file = $_FILES["file"];
+            $fileName = $_FILES["file"]['name'];
+            $fileTmpName = $_FILES["file"]['tmp_name'];
+            $fileSize = $_FILES["file"]['size'];
+            $fileError = $_FILES["file"]['error'];
 
-        $fileExt = explode(".", $fileName); //array of name and ext
-        $fileActualExt= strtolower(end($fileExt)); //extention find
+            $fileExt = explode(".", $fileName);
+            $fileActualExt = strtolower(end($fileExt));
+            $allowed = array('jpg', 'jpeg', 'png');
 
-        $allowed= array('jpg', 'jpeg', 'png'); //allowed extention
-        
-        if (in_array($fileActualExt, $allowed)){ //check ext
-            if ($fileError==0){ //check error
-                if ($fileSize<5000000){ //check size
-                    $fileNameNew = uniqid('', true).".".$fileActualExt; //generate unique name before ext
-                    $fileDestination = 'book_cover/'.$fileNameNew; //new location of the pic
-                    move_uploaded_file($fileTmpName, $fileDestination); //move the file
-
+            if (in_array($fileActualExt, $allowed)) {
+                if ($fileError == 0) {
+                    if ($fileSize < 5000000) {
+                        $fileNameNew = uniqid('', true) . "." . $fileActualExt;
+                        $fileDestination = 'book_cover/' . $fileNameNew;
+                        move_uploaded_file($fileTmpName, $fileDestination);
+                    } else {
+                        echo "Your file is too big";
+                        return; // Stop further execution
+                    }
+                } else {
+                    echo "There was an error uploading your file!";
+                    return; // Stop further execution
                 }
-                else{
-                    echo "Your file is too big";
-                }
-            }
-            else{
-                echo "There was an error uploading your file!";
-            }
-        }
-        else{
-            echo "Only jpeg, jpg and png file is supported";
-        }
-    }
-    else{
-        $fileDestination = 'book_cover/open-book.jpg'; 
-    }
-    
-    $sql = "INSERT INTO book (isbn, title, author_name, publish_date, publisher, language, pages, format, description, purchase_link, cover) VALUES ('$isbn', '$title', '$author', '$date', '$publisher', '$language', '$pages', '$format', '$description', '$purchase_link', '$fileDestination')";
-    if (mysqli_query($conn, $sql)) {
-        echo "Book added successfully";
-    } else {
-        echo "Error: " . $sql . "<br>" . mysqli_error($conn);
-    }
-    // Insert into the book_genre table
-    if (!empty($_POST['genres'])) {
-        $genres = $_POST['genres'];
-        foreach ($genres as $genre_name) {
-            // Check if the genre exists in the genre table
-            $sql_check_genre = "SELECT * FROM genre WHERE genre_name = ?";
-            $stmt_check_genre = mysqli_prepare($conn, $sql_check_genre);
-            mysqli_stmt_bind_param($stmt_check_genre, "s", $genre_name);
-            mysqli_stmt_execute($stmt_check_genre);
-            $result_genre = mysqli_stmt_get_result($stmt_check_genre);
-            
-            if (mysqli_num_rows($result_genre) > 0) {
-                // Genre exists, proceed with insertion
-                $sql_genre = "INSERT INTO book_belongs_to_genre (isbn, genre_name) VALUES (?, ?)";
-                $stmt = mysqli_prepare($conn, $sql_genre);
-                mysqli_stmt_bind_param($stmt, "ss", $isbn, $genre_name); // "ss" for string types
-                mysqli_stmt_execute($stmt);
             } else {
-                // Genre does not exist, show an error message or handle it
-                echo "Error: Genre '$genre_name' does not exist in the genre table.";
+                echo "Only jpeg, jpg, and png files are supported";
+                return; // Stop further execution
+            }
+        }
+
+        // Proceed with inserting data into the database
+        $sql = "INSERT INTO book (isbn, title, author_name, publish_date, publisher, language, pages, format, description, purchase_link, cover) 
+                VALUES ('$isbn', '$title', '$author', '$date', '$publisher', '$language', '$pages', '$format', '$description', '$purchase_link', '$fileDestination')";
+        
+        if (mysqli_query($conn, $sql)) {
+            echo "Book added successfully";
+        } else {
+            echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+        }
+
+        // Insert into the book_genre table
+        if (!empty($_POST['genres'])) {
+            $genres = $_POST['genres'];
+            foreach ($genres as $genre_name) {
+                $sql_check_genre = "SELECT * FROM genre WHERE genre_name = ?";
+                $stmt_check_genre = mysqli_prepare($conn, $sql_check_genre);
+                mysqli_stmt_bind_param($stmt_check_genre, "s", $genre_name);
+                mysqli_stmt_execute($stmt_check_genre);
+                $result_genre = mysqli_stmt_get_result($stmt_check_genre);
+                
+                if (mysqli_num_rows($result_genre) > 0) {
+                    $sql_genre = "INSERT INTO book_belongs_to_genre (isbn, genre_name) VALUES (?, ?)";
+                    $stmt = mysqli_prepare($conn, $sql_genre);
+                    mysqli_stmt_bind_param($stmt, "ss", $isbn, $genre_name);
+                    mysqli_stmt_execute($stmt);
+                } else {
+                    echo "Error: Genre '$genre_name' does not exist in the genre table.";
+                }
             }
         }
     }
-    
 }
+
 ?>
 
 <?php

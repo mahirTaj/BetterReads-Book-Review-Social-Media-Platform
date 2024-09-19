@@ -16,8 +16,15 @@
         <input type="submit" value="logout">
     </form>
 
-    <a href="edit_reader_profile.php">Edit Profile</a>
-    <a href="search.php">Search Books</a>
+    <div style="font-family: Arial, sans-serif; font-size: 18px;">
+  <a href="edit_reader_profile.php" style="text-decoration: none; color: #0066cc; margin-right: 20px;">
+    &#128100; &#9998; Edit Profile
+  </a>
+  <a href="search.php" style="text-decoration: none; color: #0066cc;">
+    &#128269; Search
+  </a>
+  <a href="genre_browse.php">Browse Genre</a>
+</div>
 </body>
 </html>
 
@@ -121,6 +128,40 @@
             echo "</td></tr>";
             echo "</table>";
             echo "</div>";
+        }
+        // Fetch user's books and their status
+        $user_id = $_SESSION['user_id'];
+        $sql = "SELECT ubrs.ISBN, ubrs.reading_status, 
+                       b.title, b.cover
+                FROM user_books_read_status ubrs
+                JOIN book b ON ubrs.ISBN = b.isbn
+                WHERE ubrs.reader_id = '$user_id'
+                ORDER BY ubrs.reading_status, b.title";
+        
+        $result = mysqli_query($conn, $sql);
+        
+        if (mysqli_num_rows($result) > 0) {
+            echo "<h2 style='font-family: Arial, sans-serif; color: #333;'>My Books</h2>";
+            
+            $current_status = '';
+            while ($row = mysqli_fetch_assoc($result)) {
+                if ($current_status != $row['reading_status']) {
+                    if ($current_status != '') {
+                        echo "</div>"; // Close previous status div
+                    }
+                    $current_status = $row['reading_status'];
+                    echo "<h3 style='font-family: Arial, sans-serif; color: #0066cc; margin-top: 20px;'>" . ucfirst($current_status) . "</h3>";
+                    echo "<div style='display: flex; flex-wrap: wrap; gap: 20px;'>";
+                }
+                
+                echo "<div style='width: 120px; text-align: center; margin-bottom: 20px;'>";
+                echo "<img src='" . htmlspecialchars($row['cover']) . "' alt='Cover of " . htmlspecialchars($row['title']) . "' style='width: 100px; height: 150px; object-fit: cover; margin-bottom: 5px;'><br>";
+                echo "<a href='book.php?isbn=" . htmlspecialchars($row['ISBN']) . "' style='font-family: Arial, sans-serif; font-size: 14px; color: #333; text-decoration: none; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;' title='" . htmlspecialchars($row['title']) . "'>" . htmlspecialchars($row['title']) . "</a>";
+                echo "</div>";
+            }
+            echo "</div>"; // Close last status div
+        } else {
+            echo "<p style='font-family: Arial, sans-serif; color: #666;'>You haven't added any books to your collection yet.</p>";
         }
     }
     else{
