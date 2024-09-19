@@ -3,7 +3,7 @@
     session_start();
     include("header.html");
 
-    // Check if a reader is selected
+    // Check if an author is selected
     if (isset($_GET['author_id'])) {
         $author_id = intval($_GET['author_id']);
         $visitor_id = $_SESSION['user_id']; // Assuming you store the logged-in user ID in session
@@ -62,7 +62,7 @@
             }
         }
 
-        // Fetch reader details from the database
+        // Fetch author details from the database
         $stmt = $conn->prepare("SELECT *
                                 FROM user u
                                 INNER JOIN author a ON u.user_id = a.author_id
@@ -91,6 +91,11 @@
 
             if (!empty($row["date_of_birth"])) {
                 echo "<p>Date of Birth: {$row["date_of_birth"]}</p>";
+            }
+
+            // Display biography
+            if (!empty($row["biography"])) {
+                echo "<p>Biography: {$row["biography"]}</p>";
             }
 
             // Check if the visitor is already following the reader
@@ -125,13 +130,46 @@
         }
 
         $stmt->close();
+
+        // Display books written by the author
+        $sql = "SELECT b.isbn, b.title, b.cover, b.publish_date
+                FROM book b
+                INNER JOIN author_writes_book awb ON b.isbn = awb.isbn
+                WHERE awb.author_id = ?";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $author_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result && $result->num_rows > 0) {
+            echo "<h3>Books by This Author</h3>";
+            echo "<div style='display: flex; flex-wrap: wrap; gap: 20px;'>";
+            
+            while ($book = $result->fetch_assoc()) {
+                $isbn = htmlspecialchars($book['isbn']);
+                $title = htmlspecialchars($book['title']);
+                $publish_date = htmlspecialchars($book['publish_date']);
+                $cover_image = !empty($book['cover']) ? htmlspecialchars($book['cover']) : 'path/to/default/book/cover.jpg';
+                
+                echo "<div style='width: 200px; text-align: center;'>";
+                echo "<a href='book.php?isbn=$isbn' style='text-decoration: none; color: inherit;'>";
+                echo "<img src='" . htmlspecialchars($cover_image) . "' alt='$title' style='width: 150px; height: 200px; object-fit: cover;'><br>";
+                echo "<strong>$title</strong><br>";
+                echo "Published: $publish_date<br>";
+                echo "</a>";
+                echo "</div>";
+            }
+            
+            echo "</div>";
+        } else {
+            echo "<p>No books found for this author.</p>";
+        }
+
+        $conn->close();
     } else {
         echo "No author selected.";
     }
 
-    $conn->close();
-?>
-
-<?php
     include("footer.html");
 ?>
