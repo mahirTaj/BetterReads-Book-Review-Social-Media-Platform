@@ -2,6 +2,10 @@
     include("database.php");
     session_start();
     include("header.html");
+?>
+<html><link rel="stylesheet" href="visitreader.css"></html>
+<?php
+
 
     // Enable error reporting for debugging
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -73,7 +77,7 @@
             $row = $result->fetch_assoc();
             $full_name = trim("{$row["fname"]} {$row["mname"]} {$row["lname"]}");
             echo "<h2>{$full_name}</h2>";
-            echo "<img height=200 src='" . (!empty($row["profile_picture"]) ? $row["profile_picture"] : "dp/person-circle.svg") . "' alt='Profile Picture'>";
+            echo "<img height=10 src='" . (!empty($row["profile_picture"]) ? $row["profile_picture"] : "dp/person-circle.svg") . "' alt='Profile Picture'>";
 
             if (!empty($row["joining_date"])) {
                 echo "<p>Joining Date: {$row["joining_date"]}</p>";

@@ -2,7 +2,9 @@
     ob_start();
     include("database.php");
     session_start();
-
+?>
+<html><link rel="stylesheet" href="genrestyle.css"></html>
+<?php
     // Check if genre_name is set in the URL
     if (!isset($_GET['genre_name'])) {
         echo "No genre specified.";

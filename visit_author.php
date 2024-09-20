@@ -2,7 +2,10 @@
     include("database.php");
     session_start();
     include("header.html");
+?>
+<html><link rel="stylesheet" href="visitreader.css"></html>
 
+<?php
     // Check if an author is selected
     if (isset($_GET['author_id'])) {
         $author_id = intval($_GET['author_id']);

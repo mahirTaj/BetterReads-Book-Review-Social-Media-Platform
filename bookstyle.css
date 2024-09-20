@@ -1,0 +1,100 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px; /* Center content */
+    margin: auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #2c3e50;
+    border-bottom: 2px solid #e74c3c;
+    padding-bottom: 10px;
+    text-align: center; /* Centered heading */
+}
+
+img {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-width: 100%; /* Ensure responsive images */
+    height: auto;
+    display: block; /* Center the image */
+    margin: 15px auto; /* Centered margin */
+}
+
+p {
+    line-height: 1.6;
+    margin: 10px 0; /* Add some spacing */
+    text-align: center; /* Center paragraphs */
+}
+
+a {
+    color: #e74c3c;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+form {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    margin: 15px auto; /* Centered margin */
+    width: 80%; /* Adjust form width */
+}
+
+label {
+    font-weight: bold;
+}
+
+select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+input[type="submit"] {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: center; /* Center the button */
+}
+
+input[type="submit"]:hover {
+    background-color: #c0392b;
+}
+
+.review-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    text-align: center; /* Center review text */
+}
+
+.comment-container {
+    border: 1px solid #ddd;
+    padding: 5px;
+    margin: 5px 0;
+    background-color: #fff;
+    border-radius: 5px;
+    text-align: center; /* Center comment text */
+}

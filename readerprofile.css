@@ -1,0 +1,147 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+h2, h3 {
+    color: #0066cc;
+}
+
+a {
+    text-decoration: none;
+    color: #0066cc;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Profile Section */
+.profile-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-container img {
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+.profile-info h2 {
+    margin: 10px 0;
+}
+
+.profile-info p {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Profile Actions */
+.profile-actions {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.profile-actions a {
+    margin: 0 15px;
+    font-size: 16px;
+    color: #0066cc;
+}
+
+.profile-actions a:hover {
+    color: #004999;
+}
+
+/* Social Media Section */
+.social-media {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.social-media table {
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+.social-media td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+/* Books Section */
+.books-section {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.books-section h2 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.books-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+}
+
+.book-item {
+    width: 120px;
+    text-align: center;
+}
+
+.book-item img {
+    width: 100px;
+    height: 150px;
+    object-fit: cover;
+    margin-bottom: 5px;
+}
+
+.book-item a {
+    font-size: 14px;
+    color: #333;
+}
+
+.no-books {
+    text-align: center;
+    color: #666;
+}
+
+/* Logout Button */
+form {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+form input[type="submit"] {
+    background-color: #0066cc;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 5px;
+}
+
+form input[type="submit"]:hover {
+    background-color: #004999;
+}

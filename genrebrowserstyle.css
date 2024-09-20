@@ -1,0 +1,70 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px; /* Increased margin for better separation */
+}
+
+h3 {
+    color: #3498db;
+    margin: 10px 0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: #2980b9; /* Slightly darker color on hover */
+}
+
+ul {
+    list-style-type: none; /* Remove default list style */
+    padding: 0; /* Remove default padding */
+    text-align: center; /* Center the list */
+}
+
+li {
+    margin: 10px 0; /* Add spacing between items */
+}
+
+.book-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px; /* Add space above the book container */
+}
+
+.book-item {
+    border: 1px solid #ddd;
+    padding: 15px; /* Increased padding for better spacing */
+    margin: 10px;
+    width: 200px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.book-item:hover {
+    transform: scale(1.05);
+}
+
+.book-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.book-item p {
+    margin: 5px 0;
+    color: #555;
+}

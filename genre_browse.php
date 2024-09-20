@@ -2,7 +2,9 @@
     ob_start();
     include("database.php");
     session_start();
-
+?>
+<html><link rel="stylesheet" href="genrebrowserstyle.css"></html>
+<?php
     // Fetch all genres and their respective book count
     $stmt_genres = $conn->prepare("
         SELECT g.genre_name, COUNT(bg.isbn) AS book_count

@@ -9,6 +9,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Book</title>
+    <link rel="stylesheet" href="bookaddstyle.css">
 </head>
 <body>
     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post" enctype="multipart/form-data">
@@ -84,6 +85,7 @@
             <input type="submit" value="Add Book" name="add">
         </div>
     </form>
+
 </body>
 </html>
 

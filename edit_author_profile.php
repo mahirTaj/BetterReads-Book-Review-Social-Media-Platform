@@ -11,6 +11,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>edit author profile</title>
+    <link rel="stylesheet" href="editauthorstyle.css">
 </head>
 <body>
     <a href="author_profile.php">Go back to your Profile</a>
@@ -89,6 +90,7 @@
 
         <div><input type="submit" name="submit" value="Save Changes"></div>
     </form>
+
 </body>
 </html>
 

@@ -11,6 +11,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="editreaderstyle.css">
 </head>
 <body>
     <a href="reader_profile.php">Go back to your Profile</a>
@@ -101,6 +102,7 @@
 
         <div><input type="submit" name="submit" value="Save Changes"></div>
     </form>
+
 </body>
 </html>
 

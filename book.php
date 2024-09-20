@@ -2,7 +2,9 @@
     ob_start();
     include("database.php");
     session_start();
-
+?>
+<html><link rel="stylesheet" href="bookstyle.css"></html>
+<?php
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
         echo "Please log in to rate and review.";

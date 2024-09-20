@@ -10,6 +10,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="indexstyle.css">
 </head>
 <body>
     <h2>Login Page</h2>
@@ -27,6 +28,7 @@
             </div>
     </form>
     <a href="registration.php">Not registered? Click here</a>
+
 </body>
 </html>
 
