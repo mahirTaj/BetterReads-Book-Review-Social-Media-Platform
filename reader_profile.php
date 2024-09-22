@@ -149,7 +149,7 @@
             if (!empty($det["about_me"])) {
                 echo "<div class='reader-info'>";
                 echo "<h2>About Me</h2>";
-                echo "<blockquote>" . htmlspecialchars($det["about_me"]) . "</blockquote>";
+                echo "<blockquote>" . ($det["about_me"]) . "</blockquote>";
                 echo "</div>";
             }
         
@@ -215,7 +215,7 @@
                             <a href="view_user_profile.php?user_id=<?php echo $followed['user_id']; ?>">
                                 <strong><?php echo htmlspecialchars($followed['fname'] . ' ' . $followed['lname']); ?></strong>
                             </a><br>
-                            <?php echo htmlspecialchars(substr($followed['about_me'], 0, 50) . '...'); ?>
+                            <?php echo (substr($followed['about_me'], 0, 50) . '...'); ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -237,7 +237,7 @@
              ORDER BY ubrs.reading_status, b.title";
      
     $result = mysqli_query($conn, $sql);
-     
+    
     if (mysqli_num_rows($result) > 0) {
         $current_status = '';
         while ($row = mysqli_fetch_assoc($result)) {
