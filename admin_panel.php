@@ -18,6 +18,9 @@
     </form>
     <h2>Admin Panel</h2>
     <a href="book_add.php">Add Book</a>
+    <a href="search_for_edit.php">Edit Book</a>
+    
+
 
 </body>
 </html>
