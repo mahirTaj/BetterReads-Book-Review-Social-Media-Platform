@@ -1,1 +1,1 @@
-# Book Review Website
+# BetterReads (Book Review Social Media Platform)
